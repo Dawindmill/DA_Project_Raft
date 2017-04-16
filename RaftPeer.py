@@ -54,8 +54,7 @@ class RaftPeer:
     def process_json_message_recv_queue(self):
         while True:
             one_recv_json_message = self.json_message_recv_queue.get()
-            #logging.debug( " start thread => accept successful ", extra = self.my_addr )
-
+            logging.debug( " processing one recv message " + str(one_recv_json_message), extra = self.my_addr )
             #in json encode it is two element list
             senpeer_addr, peer_port = one_recv_json_message["send_from"]
             one_recv_json_message_type = one_recv_json_message["msg_type"]
@@ -64,6 +63,7 @@ class RaftPeer:
     def process_json_message_send_queue(self):
         while True:
             one_send_json_message = self.json_message_send_queue.get()
+            logging.debug( " processing one send message " + str(one_send_json_message), extra = self.my_addr )
             #in json encode it is two element list
             peer_addr, peer_port = one_send_json_message["send_to"]
             self.send_to_peer((peer_addr, peer_port), one_send_json_message)
@@ -92,7 +92,7 @@ class RaftPeer:
             self.peers_addr_listen_socket[peer_addr_port_tuple] = peer_socket
             logging.debug(" recv socket from " + str(peer_addr_port_tuple), extra = self.my_addr)
             try:
-                _thread.start_new_thread(self.process_json_message_recv_queue, ())
+                _thread.start_new_thread(self.receive_from_one_peer_newline_delimiter, (peer_addr_port_tuple, ))
                 logging.debug(" creating recv thread successful => " + str(peer_addr_port_tuple), extra = self.my_addr)
             except Exception as e:
                 logging.debug(" creating recv thread failed => " + str(peer_addr_port_tuple), extra = self.my_addr)
@@ -137,10 +137,10 @@ class RaftPeer:
         for peer_addr in self.peers_addr_listen_socket.keys():
             self.receive_from_one_peer_newline_delimiter(peer_addr)
 
-    def receive_from_one_peer_newline_delimiter(self, peer_addr):
-        logging.debug(" recv json_data from " + str(peer_addr), extra = self.my_addr)
-        self._check_peer_in(peer_addr)
-        peer_socket = self.peers_addr_listen_socket[peer_addr]
+    def receive_from_one_peer_newline_delimiter(self, peer_addr_port_tuple):
+        logging.debug(" recv json_data from " + str(peer_addr_port_tuple), extra = self.my_addr)
+        self._check_peer_in(peer_addr_port_tuple)
+        peer_socket = self.peers_addr_listen_socket[peer_addr_port_tuple]
         msg = ""
         #could be wrong if msg size bigger than 1024, need further testing
         for i in range(1):
@@ -156,7 +156,7 @@ class RaftPeer:
                         logging.debug(" put one json_data " + one_json_msg, extra = self.my_addr)
                     except Exception as e:
                         logging.debug( " deserialization recv json data failed " + str(e), extra = self.my_addr)
-        logging.debug( " receive_from_one_peer_newline_delimiter terminated " + str(peer_addr), extra = self.my_addr)
+        logging.debug( " receive_from_one_peer_newline_delimiter terminated " + str(peer_addr_port_tuple), extra = self.my_addr)
 
     #this receiv need size first if want to use it change send_to_peer to send msg size first
     # def receive_from_peer(self, peer_addr):

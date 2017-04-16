@@ -7,6 +7,29 @@ Date: 16/04/2017
 '''
 
 
+def test_five_peer_send_recv():
+    peer1 = ("localhost", 1111)
+    peer2 = ("localhost", 2222)
+    peer3 = ("localhost", 3333)
+    peer4 = ("localhost", 4444)
+    peer5 = ("localhost", 5555)
+
+    peer_addr_port_tuple_list = [peer1, peer2, peer3, peer4, peer5]
+
+    peer1_raft = RaftPeer(peer1[0], peer1[1])
+    peer2_raft = RaftPeer(peer2[0], peer2[1])
+    peer3_raft = RaftPeer(peer3[0], peer3[1])
+    peer4_raft = RaftPeer(peer4[0], peer4[1])
+    peer5_raft = RaftPeer(peer5[0], peer5[1])
+
+    peer_raft_list = [peer1_raft, peer2_raft, peer3_raft, peer4_raft, peer5_raft]
+
+    for one_peer_raft in peer_raft_list:
+        one_peer_raft.connect_to_all_peer(peer_addr_port_tuple_list)
+    send_json_data = {"send_to": [peer2[0], peer2[1]], "send_from": [peer1[0], peer1[1]], "msg_type": "test"}
+    peer1_raft.json_message_send_queue.put(send_json_data)
+    time.sleep(100)
+
 def test_five_peer():
     peer1 = ("localhost", 1111)
     peer2 = ("localhost", 2222)
@@ -64,6 +87,7 @@ def test_two_peer():
 
 #test_two_peer()
 
-test_five_peer()
+#test_five_peer()
 
+test_five_peer_send_recv()
 
