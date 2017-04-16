@@ -1,3 +1,4 @@
+import _thread
 import json
 import socket
 import logging
@@ -28,27 +29,73 @@ class RaftPeer:
         self.socket.bind((host, port))
         self.socket.listen(self.backlog)
         #key is peer_addr => (ip, port)
+        #used to rec message
         self.peers_addr_listen_socket = {}
+        #used to send message
         self.peers_addr_client_socket = {}
-        self.json_message_queue = Queue()
+        #when recv fron server listen port, we must include sender's listen port and ip
+        #other wise we dont know the msg is from which peer and send to who in peer_addr_client_socket
+        #in peer_addr_client_socket we use known peer's ip and port as key
+        self.json_message_recv_queue = Queue()
+        self.json_message_send_queue = Queue()
+        try:
+            #use argument (first_arg, second_arg, ) note the extra last comma might be needed?
+            _thread.start_new_thread(self.process_json_message_send_queue, ())
+            logging.debug( " start thread => process_json_message_send_queue successful ", extra = self.my_addr )
+            _thread.start_new_thread(self.process_json_message_recv_queue, ())
+            logging.debug( " start thread => process_json_message_recv_queue successful ", extra = self.my_addr )
+            _thread.start_new_thread(self.accept, ())
+            logging.debug( " start thread => accept successful ", extra = self.my_addr )
+
+        except Exception as e:
+            logging.debug( "Error: unable to start processing threads " + str(e), extra = self.my_addr )
 
 
-    #[(ip, port)...]
-    #def connect_to_all_peer(self, peer_ip_port_tuple_list):
+    def process_json_message_recv_queue(self):
+        while True:
+            one_recv_json_message = self.json_message_recv_queue.get()
+            #logging.debug( " start thread => accept successful ", extra = self.my_addr )
+
+            #in json encode it is two element list
+            senpeer_addr, peer_port = one_recv_json_message["send_from"]
+            one_recv_json_message_type = one_recv_json_message["msg_type"]
 
 
-    def connect_to_peer(self, peer_addr, peer_port):
+    def process_json_message_send_queue(self):
+        while True:
+            one_send_json_message = self.json_message_send_queue.get()
+            #in json encode it is two element list
+            peer_addr, peer_port = one_send_json_message["send_to"]
+            self.send_to_peer((peer_addr, peer_port), one_send_json_message)
+
+
+    #[(ip => str, port => int)...]
+    def connect_to_all_peer(self, peer_addr_port_tuple_list):
+        my_peer_addr_port_tuple = (self.my_addr['host'], int(self.my_addr['port']))
+        #in referece remove
+        peer_addr_port_tuple_list.remove(my_peer_addr_port_tuple)
+        for one_peer_addr, one_peer_port in peer_addr_port_tuple_list:
+            self.connect_to_peer((one_peer_addr, one_peer_port))
+
+
+    def connect_to_peer(self, peer_addr_port_tuple):
         #use to send message to other peers
         client_socket = socket.socket()
-        logging.debug("raft peer connect to " + str(peer_addr) + " " + str(peer_port), extra = self.my_addr)
-        client_socket.connect((peer_addr, peer_port))
-        self.peers_addr_client_socket[(peer_addr, peer_port)] = client_socket
+        logging.debug("raft peer connect to " + str(peer_addr_port_tuple), extra = self.my_addr)
+        client_socket.connect(peer_addr_port_tuple)
+        self.peers_addr_client_socket[peer_addr_port_tuple] = client_socket
 
     def accept(self):
-        peer_socket, peer_addr = self.socket.accept()
-        #peer_addr => (ip, port)
-        self.peers_addr_listen_socket[peer_addr] = peer_socket
-        logging.debug(" recv socket from " + str(peer_addr), extra = self.my_addr)
+        while True:
+            peer_socket, peer_addr_port_tuple = self.socket.accept()
+            #peer_addr => (ip, port)
+            self.peers_addr_listen_socket[peer_addr_port_tuple] = peer_socket
+            logging.debug(" recv socket from " + str(peer_addr_port_tuple), extra = self.my_addr)
+            try:
+                _thread.start_new_thread(self.process_json_message_recv_queue, ())
+                logging.debug(" creating recv thread successful => " + str(peer_addr_port_tuple), extra = self.my_addr)
+            except Exception as e:
+                logging.debug(" creating recv thread failed => " + str(peer_addr_port_tuple), extra = self.my_addr)
 
     def close(self):
         for peer_addr, socket_from_listen in self.peers_addr_listen_socket.items():
@@ -68,10 +115,10 @@ class RaftPeer:
         for peer_addr in self.peers_addr_client_socket.keys():
             self.send_to_peer(peer_addr, json_data)
 
-    def send_to_peer(self, peer_addr, json_data):
-        logging.debug(" sending json_data to " + str(peer_addr), extra = self.my_addr)
-        self._check_peer_in(peer_addr)
-        peer_socket = self.peers_addr_client_socket[peer_addr]
+    def send_to_peer(self, peer_addr_port_tuple, json_data):
+        logging.debug(" sending json_data to " + str(peer_addr_port_tuple), extra = self.my_addr)
+        self._check_peer_in(peer_addr_port_tuple)
+        peer_socket = self.peers_addr_client_socket[peer_addr_port_tuple]
         try:
             serialized_json_data = json.dumps(json_data)
             logging.debug(" json data serialization " + serialized_json_data, extra = self.my_addr)
@@ -105,7 +152,7 @@ class RaftPeer:
                     try:
                         logging.debug(" recv one json_data " + one_json_msg, extra = self.my_addr)
                         one_deserialized_json_data = json.loads(one_json_msg)
-                        self.json_message_queue.put(one_deserialized_json_data)
+                        self.json_message_recv_queue.put(one_deserialized_json_data)
                         logging.debug(" put one json_data " + one_json_msg, extra = self.my_addr)
                     except Exception as e:
                         logging.debug( " deserialization recv json data failed " + str(e), extra = self.my_addr)
