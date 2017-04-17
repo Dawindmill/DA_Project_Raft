@@ -1,10 +1,16 @@
 import time
 from RaftPeer import *
-
+from RaftPeerState import *
 '''
 Author: Bingfeng Liu
 Date: 16/04/2017
 '''
+
+def test_print_raft_peer_state():
+    peer_state = RaftPeerState(("localhost", 1111))
+    peer_state.state_log = [123,123,123]
+    peer_state.peers_match_index = {"peer1":123, "peer2":123,"peer3":999, "peer4":2222}
+    print (str(peer_state))
 
 
 def test_five_peer_send_recv():
@@ -89,5 +95,7 @@ def test_two_peer():
 
 #test_five_peer()
 
-test_five_peer_send_recv()
+#test_five_peer_send_recv()
+
+test_print_raft_peer_state()
 
