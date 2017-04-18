@@ -3,9 +3,11 @@ Author: Bingfeng Liu
 Created Date: 18/04/2017
 '''
 
+from LogData import LogData
+
 class RaftPeerState:
-    def __init__(self, addr_port_tupe):
-        self.my_addr_port_tuple = addr_port_tupe
+    def __init__(self, addr_port_tuple):
+        self.my_addr_port_tuple = addr_port_tuple
         self.current_term = 0
         #can set it to addr_port_tuple?
         self.vote_for = None

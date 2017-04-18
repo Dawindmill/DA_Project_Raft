@@ -3,13 +3,15 @@ import json
 import socket
 import logging
 from queue import Queue
+from LogData import LogData
+
 '''
 Author: Bingfeng Liu
 Date: 16/04/2017
 '''
 
 logger = logging.getLogger("RpcDriver")
-FORMAT = '[%(asctime)-15s][%(levelname)s][%(host)s][%(port)s][%(funcName)s] %(message)s'
+FORMAT = '[RaftPeer][%(asctime)-15s][%(levelname)s][%(host)s][%(port)s][%(funcName)s] %(message)s'
 logging.basicConfig(format=FORMAT, level = logging.DEBUG)
 
 #this RaftPeer is inspired from http://lesoluzioni.blogspot.com.au/2015/12/python-json-socket-serverclient.html
@@ -19,7 +21,8 @@ class RaftPeer:
     #thread safe queue FIFO
     #https://docs.python.org/2/library/queue.html
 
-    def __init__(self, host, port):
+    def __init__(self, host, port, peer_id):
+        self.peer_id = peer_id
         self.my_addr = {"host":str(host), "port":str(port)}
         logging.debug(" init raft peer " + str(host) + " " + str(port), extra = self.my_addr)
         #use to listen or recv message from other peers
@@ -110,24 +113,24 @@ class RaftPeer:
             logging.debug(" " + str(peer_addr) + " not in peers_addr_socket", extra = self.my_addr)
             return
 
-    def sent_to_all_peer(self, json_data):
+    def sent_to_all_peer(self, json_data_dict):
         logging.debug(" sending json_data to all peers as client ", extra = self.my_addr)
         for peer_addr in self.peers_addr_client_socket.keys():
-            self.send_to_peer(peer_addr, json_data)
+            self.send_to_peer(peer_addr, json_data_dict)
 
-    def send_to_peer(self, peer_addr_port_tuple, json_data):
+    def send_to_peer(self, peer_addr_port_tuple, json_data_dict):
         logging.debug(" sending json_data to " + str(peer_addr_port_tuple), extra = self.my_addr)
         self._check_peer_in(peer_addr_port_tuple)
         peer_socket = self.peers_addr_client_socket[peer_addr_port_tuple]
         try:
-            serialized_json_data = json.dumps(json_data)
+            serialized_json_data = json.dumps(json_data_dict)
             logging.debug(" json data serialization " + serialized_json_data, extra = self.my_addr)
             #send msg size
             #peer_socket.send(str.encode(str(len(serialized_json_data))+"\n", "utf-8"))
             logging.debug(" json data sent len " + str(len(serialized_json_data)), extra = self.my_addr)
             peer_socket.sendall(str.encode(serialized_json_data + "\n","utf-8"))
         except Exception as e:
-            logging.debug(" json data serialization failed " + str(json_data) + str(e), extra = self.my_addr)
+            logging.debug(" json data serialization failed " + str(json_data_dict) + str(e), extra = self.my_addr)
         #make it utf8r
 
 
