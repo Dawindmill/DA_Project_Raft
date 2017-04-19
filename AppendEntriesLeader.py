@@ -8,6 +8,7 @@ class AppendEntriesLeader:
     # for leader to initialize appen entry
     # assume add entry frist to raft_peer_state then create this obj
     def __init__(self, raft_peer_state, send_to_addr_port_tuple):
+        self.msg_type = "append_entries_leader"
         self.raft_peer_state = raft_peer_state
         self.append_entries_type = "leader_send"
         self.leader_term = raft_peer_state.current_term
@@ -30,6 +31,4 @@ class AppendEntriesLeader:
             return str(vars(self))
 
         def return_instance_vars_in_dict(self):
-            instance_dict = vars(self)
-            instance_dict["msg_type"] = "append_entries_leader"
-            return instance_dict
+            return vars(self)

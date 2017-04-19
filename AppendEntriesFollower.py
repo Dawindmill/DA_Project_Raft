@@ -3,22 +3,22 @@ logger = logging.getLogger("AppendEntiesFollower")
 from LogData import LogData
 class AppendEntriesFollower:
     #for follower to receive it
-    def __init__(self, append_entries_json_data, raft_peer_state):
+    def __init__(self, append_entries_json_data_dict, raft_peer_state):
         self.raft_peer_state = raft_peer_state
         self.host_port_dict = {"host":str(raft_peer_state.my_addr_port_tuple[0]),
                                "port":str(raft_peer_state.my_addr_port_tuple[1]),
                                "peer_id":str(raft_peer_state.peer_id)}
         self.append_entries_type = "follower_receive"
-        self.leader_term = append_entries_json_data["leader_term"]
-        self.leader_id = append_entries_json_data["leader_id"]
-        self.prev_log_index = int(append_entries_json_data["prev_log_index"])
-        self.prev_log_term = int(append_entries_json_data["prev_log_term"])
+        self.leader_term = append_entries_json_data_dict["leader_term"]
+        self.leader_id = append_entries_json_data_dict["leader_id"]
+        self.prev_log_index = int(append_entries_json_data_dict["prev_log_index"])
+        self.prev_log_term = int(append_entries_json_data_dict["prev_log_term"])
         #could be one or more for efficiency, should be a list of log_data_dict
-        self.new_entries = append_entries_json_data["new_entries"]
-        self.leader_commit_index = int(append_entries_json_data["leader_commit_index"])
+        self.new_entries = append_entries_json_data_dict["new_entries"]
+        self.leader_commit_index = int(append_entries_json_data_dict["leader_commit_index"])
         #first => addr, second => port
-        self.send_from = tuple(append_entries_json_data["send_from"])
-        self.send_to = tuple(append_entries_json_data["send_to"])
+        self.send_from = tuple(append_entries_json_data_dict["send_from"])
+        self.send_to = tuple(append_entries_json_data_dict["send_to"])
 
     #for follower to process received append entries and return result as dict
 
@@ -27,7 +27,7 @@ class AppendEntriesFollower:
             logger.debug(" leader shouldn't process append entries ", extra = self.host_port_dict)
         result = {"send_from": list(self.raft_peer_state.my_addr_port_tuple),
                   "send_to": list(self.send_from),
-                  "follower_term":self.raft_peer_state.current_term,
+                  "sender_term":self.raft_peer_state.current_term,
                   "append_entries_result": True,
                   "msg_type": "append_entries_follower_reply"}
 
