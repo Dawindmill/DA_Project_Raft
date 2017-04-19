@@ -6,9 +6,10 @@ Created Date: 18/04/2017
 from LogData import LogData
 
 class RaftPeerState:
-    def __init__(self, addr_port_tuple):
+    def __init__(self, addr_port_tuple, peer_id):
+        self.peer_id = peer_id
         self.my_addr_port_tuple = addr_port_tuple
-        self.current_term = 0
+        self.current_term = -1
         #can set it to addr_port_tuple?
         self.vote_for = None
         #might not be used but for completeness of Raft
@@ -19,6 +20,7 @@ class RaftPeerState:
         #peer_addr_port_tuple and its next index
         self.peers_next_index = {}
         self.peers_match_index = {}
+
 
     def top_horizontal_line_with_num(self, max_length):
         horizontal_line = "-"

@@ -1,28 +1,13 @@
 import logging
-logger = logging.getLogger("RPC")
-FORMAT = '[AppendEntries][%(asctime)-15s][%(levelname)s][%(host)s][%(port)s][%(funcName)s] %(message)s'
-logging.basicConfig(format=FORMAT, level = logging.DEBUG)
+logger = logging.getLogger("AppendEntiesFollower")
 from LogData import LogData
-class AppendEntries:
-    #for leader to initialize appen entry
-    def __init__(self, raft_peer_state, send_to_addr_port_tuple):
-        self.raft_peer_state = raft_peer_state
-        self.append_entries_type = "leader_send"
-        self.leader_term = raft_peer_state.current_term
-        self.leader_id = raft_peer_state.my_addr_port_tuple
-        #leader's log index before the new appended entry
-        self.prev_log_index = raft_peer_state.state_log[-2].index
-        self.prev_log_term = raft_peer_state.state_log[-2].term
-        #could be one or more for efficiency
-        self.new_entries = raft_peer_state[-1]
-        self.leader_commit_index = raft_peer_state.commit_index
-        self.send_from = raft_peer_state.my_addr_port_tuple
-        self.send_to = send_to_addr_port_tuple
-
+class AppendEntriesFollower:
     #for follower to receive it
     def __init__(self, append_entries_json_data, raft_peer_state):
         self.raft_peer_state = raft_peer_state
-        self.host_port_dict = {"host":raft_peer_state.my_addr_port_tuple[0], "port":raft_peer_state.my_addr_port_tuple[1]}
+        self.host_port_dict = {"host":str(raft_peer_state.my_addr_port_tuple[0]),
+                               "port":str(raft_peer_state.my_addr_port_tuple[1]),
+                               "peer_id":str(raft_peer_state.peer_id)}
         self.append_entries_type = "follower_receive"
         self.leader_term = append_entries_json_data["leader_term"]
         self.leader_id = append_entries_json_data["leader_id"]
@@ -39,12 +24,12 @@ class AppendEntries:
 
     def process_append_entries(self):
         if self.append_entries_type == "leader_send":
-            logging.debug(" leader shouldn't process append entries ", extra = self.host_port_dict)
+            logger.debug(" leader shouldn't process append entries ", extra = self.host_port_dict)
         result = {"send_from": list(self.raft_peer_state.my_addr_port_tuple),
                   "send_to": list(self.send_from),
                   "follower_term":self.raft_peer_state.current_term,
                   "append_entries_result": True,
-                  "type": "follower_append_entries_reply"}
+                  "msg_type": "append_entries_follower_reply"}
 
         #reply false if this.follower's term > leader's term
         if self.raft_peer_state.current_term > self.leader_term:
@@ -52,7 +37,7 @@ class AppendEntries:
             return result
         #reply false if this.follower's does not have this prev_index, and term does not match
         #so even the follower has more log we only check the prev_index one?
-        if len(self.raft_peer_state.state_log - 1) < self.prev_log_index:
+        if (len(self.raft_peer_state.state_log) - 1) < self.prev_log_index:
             result["append_entries_result"] = False
             return result
 
@@ -61,7 +46,14 @@ class AppendEntries:
             result["append_entries_result"] = False
             return result
         result["append_entries_result"] = True
+        self.raft_peer_state.current_term = self.leader_term
+
         self.add_in_new_entries()
+
+        self.raft_peer_state.commit_index = self.leader_commit_index
+
+        self.process_commit_index(self.raft_peer_state.commit_index)
+
         return result
 
     def add_in_new_entries(self):
@@ -71,18 +63,22 @@ class AppendEntries:
                                        one_new_log["log_command_type"],
                                        one_new_log["log_committed"])
             #if follower is not longer than leader
-            if self.prev_log_index == len(self.raft_peer_state.state_log - 1):
+            if self.prev_log_index == (len(self.raft_peer_state.state_log) - 1):
                 self.raft_peer_state.state_log.append(one_new_log_data)
             #if follower id longer, it can be shorter bc of above filter
             else:
                 self.raft_peer_state.state_log[self.prev_log_index + 1] = one_new_log_data
                 self.raft_peer_state.state_log = self.raft_peer_state.state_log[0:self.prev_log_index + 2]
 
+
+    def process_commit_index(self, commit_index):
+        for one_log_data in self.raft_peer_state.state_log[0:commit_index]:
+            one_log_data.log_committed = True
+        self.raft_peer_state.last_apply = commit_index
+
     def __str__(self):
         return str(vars(self))
 
-    def return_instance_vars_in_dict(self):
-        return vars(self)
 
 
 

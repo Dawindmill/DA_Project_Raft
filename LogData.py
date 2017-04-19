@@ -12,4 +12,4 @@ class LogData:
         self.log_command_type = command_type
         self.log_committed = committed
     def __str__(self):
-        return "index => " + str(self.index) + " term => " + str(self.term)
+        return str(vars(self))

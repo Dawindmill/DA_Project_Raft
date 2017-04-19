@@ -1,7 +1,8 @@
 import time
 import _thread
-from RaftPeer import *
-from RaftPeerState import *
+from RaftPeer import RaftPeer
+from RaftPeerState import RaftPeerState
+from TimeoutCounter import TimeoutCounter
 '''
 Author: Bingfeng Liu
 Date: 16/04/2017
@@ -104,6 +105,19 @@ def test_sleep_time():
 
     print(str(gap))
 
+def test_time_counter():
+    peer_id = "peer1"
+    addr_port_tuple = ("localhost", 1111)
+    time_counter = TimeoutCounter(0.1, addr_port_tuple, peer_id)
+    #time_counter.time_counter()
+    _thread.start_new_thread(time_counter.time_counter, ())
+    while True:
+        print ("="*100 + "main thread")
+        time.sleep(1)
+
+    #sleep main thread
+    #time.sleep(10)
+
 #test_two_peer()
 
 #test_five_peer()
@@ -112,5 +126,6 @@ def test_sleep_time():
 
 #test_print_raft_peer_state()
 
+#test_sleep_time()
 
-test_sleep_time()
+test_time_counter()
