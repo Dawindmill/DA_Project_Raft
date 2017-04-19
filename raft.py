@@ -1,4 +1,5 @@
 import time
+import _thread
 from RaftPeer import *
 from RaftPeerState import *
 '''
@@ -91,11 +92,25 @@ def test_two_peer():
     peer1.close()
     peer2.close()
 
+
+def test_sleep_time():
+    lock = _thread.allocate_lock()
+    last = time.time()
+    time.sleep(0.001)
+
+    with lock:
+        gap = time.time() - last
+    #gap = time.time() - last
+
+    print(str(gap))
+
 #test_two_peer()
 
 #test_five_peer()
 
-test_five_peer_send_recv()
+#test_five_peer_send_recv()
 
 #test_print_raft_peer_state()
 
+
+test_sleep_time()
