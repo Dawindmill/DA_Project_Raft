@@ -11,8 +11,8 @@ class AppendEntriesLeader:
         self.msg_type = "append_entries_leader"
         self.raft_peer_state = raft_peer_state
         self.append_entries_type = "leader_send"
-        self.leader_term = raft_peer_state.current_term
-        self.leader_id = raft_peer_state.my_addr_port_tuple
+        self.sender_term = raft_peer_state.current_term
+        self.sender_id = raft_peer_state.my_addr_port_tuple
         # leader's log index before the new appended entry
         if len(raft_peer_state.state_log) >= 2:
             self.prev_log_index = raft_peer_state.state_log[-2].index
@@ -25,7 +25,7 @@ class AppendEntriesLeader:
         self.new_entries = raft_peer_state[-1]
         self.leader_commit_index = raft_peer_state.commit_index
         self.send_from = raft_peer_state.my_addr_port_tuple
-        self.send_to = send_to_addr_port_tuple
+        self.send_to = list(send_to_addr_port_tuple)
 
         def __str__(self):
             return str(vars(self))

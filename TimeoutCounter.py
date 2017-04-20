@@ -18,20 +18,21 @@ class TimeoutCounter:
         self.last = 0
         self.sleep_time = 0.001
 
-    def time_counter(self):
+    def start_time_counter(self, raft_peer):
         self.last =time.time()
         while True:
             self.last = time.time()
             time.sleep(self.sleep_time)
             gap = time.time() - self.last
-            logger.debug(" gap => " + str(gap), extra = self.my_detial)
+            #logger.debug(" gap => " + str(gap), extra = self.my_detial)
             with self.lock:
                 #1ms
                 self.time_out -= gap
                 if self.time_out < 0:
                     #will dead lock if called it inside
                     self.time_out = self.time_out_const
-                logger.debug(" time_out left => " + str(self.time_out), extra=self.my_detial)
+                    logger.debug(" time_out left => " + str(self.time_out), extra=self.my_detial)
+                    raft_peer.put_sent_to_all_peer_request_vote()
 
                     #if self.time_out <= 0:
 

@@ -64,16 +64,16 @@ def test_two_peer():
     peer1_port = 1235
     peer2_port =1236
 
-    peer1 = RaftPeer("localhost", peer1_port)
+    peer1 = RaftPeer("localhost", peer1_port, "peer1")
 
-    peer2 = RaftPeer("localhost", peer2_port)
+    peer2 = RaftPeer("localhost", peer2_port, "peer2")
 
-    peer2.connect_to_peer("localhost", peer1_port)
+    peer2.connect_to_peer(("localhost", peer1_port))
 
     peer1.accept()
 
 
-    peer1.connect_to_peer("localhost", peer2_port)
+    peer1.connect_to_peer(("localhost", peer2_port))
 
     peer2.accept()
 
@@ -84,7 +84,7 @@ def test_two_peer():
     #return_json_data = peer2.receive_from_peer(list(peer2.peers_addr_listen_socket.keys())[0])
     peer2.receive_from_one_peer_newline_delimiter(list(peer2.peers_addr_listen_socket.keys())[0])
 
-    return_json_data = peer2.json_message_queue.get()
+    return_json_data = peer2.json_message_recv_queue.get()
 
     print (str(return_json_data))
 
@@ -110,7 +110,7 @@ def test_time_counter():
     addr_port_tuple = ("localhost", 1111)
     time_counter = TimeoutCounter(0.1, addr_port_tuple, peer_id)
     #time_counter.time_counter()
-    _thread.start_new_thread(time_counter.time_counter, ())
+    _thread.start_new_thread(time_counter.start_time_counter, ())
     while True:
         print ("="*100 + "main thread")
         time.sleep(1)

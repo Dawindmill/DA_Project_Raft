@@ -2,24 +2,37 @@
 Author: Bingfeng Liu
 Created Date: 18/04/2017
 '''
-
+import _thread
 from LogData import LogData
 
 class RaftPeerState:
     def __init__(self, addr_port_tuple, peer_id):
+        self.lock = _thread.allocate_lock()
         self.peer_id = peer_id
         self.my_addr_port_tuple = addr_port_tuple
         self.current_term = -1
-        #can set it to addr_port_tuple?
+        # can set it to addr_port_tuple?
         self.vote_for = None
-        #might not be used but for completeness of Raft
+        # might not be used but for completeness of Raft
         self.state_log = []
         self.commit_index = -1
         self.last_apply = -1
-        #reinitialize after election use self next index?
-        #peer_addr_port_tuple and its next index
+        # reinitialize after election use self next index?
+        # peer_addr_port_tuple and its next index
         self.peers_next_index = {}
         self.peers_match_index = {}
+        #follower, candidate, leader
+        self.peer_state = "follower"
+        self.leader_majority_count = 0
+
+    def increment_leader_majority_count(self):
+        if self.peer_state == "candidate":
+            self.leader_majority_count += 1
+
+    def elected_leader(self, majority):
+        if self.leader_majority_count >= majority and self.peer_state == "candidate":
+            self.peer_state = "leader"
+            self.leader_majority_count = 0
 
 
     def top_horizontal_line_with_num(self, max_length):

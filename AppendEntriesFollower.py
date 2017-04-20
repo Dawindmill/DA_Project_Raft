@@ -9,8 +9,8 @@ class AppendEntriesFollower:
                                "port":str(raft_peer_state.my_addr_port_tuple[1]),
                                "peer_id":str(raft_peer_state.peer_id)}
         self.append_entries_type = "follower_receive"
-        self.leader_term = append_entries_json_data_dict["leader_term"]
-        self.leader_id = append_entries_json_data_dict["leader_id"]
+        self.leader_term = append_entries_json_data_dict["sender_term"]
+        self.leader_id = append_entries_json_data_dict["peer_id"]
         self.prev_log_index = int(append_entries_json_data_dict["prev_log_index"])
         self.prev_log_term = int(append_entries_json_data_dict["prev_log_term"])
         #could be one or more for efficiency, should be a list of log_data_dict
@@ -25,7 +25,9 @@ class AppendEntriesFollower:
     def process_append_entries(self):
         if self.append_entries_type == "leader_send":
             logger.debug(" leader shouldn't process append entries ", extra = self.host_port_dict)
-        result = {"send_from": list(self.raft_peer_state.my_addr_port_tuple),
+        result = {"log_index_start": self.new_entries[0].index,
+                  "log_index_end": self.new_entries[-1].index,
+                  "send_from": list(self.raft_peer_state.my_addr_port_tuple),
                   "send_to": list(self.send_from),
                   "sender_term":self.raft_peer_state.current_term,
                   "append_entries_result": True,
