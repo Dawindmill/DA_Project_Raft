@@ -29,7 +29,7 @@ class RaftPeer:
     #https://docs.python.org/2/library/queue.html
 
     def __init__(self, host, port, peer_id):
-        self.max_peer_number = 5
+        self.max_peer_number = 2
         self.my_addr_port_tuple = (host, port)
         self.peer_id = peer_id
         self.my_detail = {"host":str(host), "port":str(port), "peer_id":str(peer_id)}
@@ -70,11 +70,18 @@ class RaftPeer:
 
 
     def start_raft_peer(self):
-        _thread.start_new_thread(self.timeout_counter.start_time_counter(), (self, ))
+        _thread.start_new_thread(self.timeout_counter.start_time_counter, (self, ))
 
     def process_json_message_recv_queue(self):
         while True:
+            logger.debug(" start receive ", extra=self.my_detail)
             one_recv_json_message_dict = self.json_message_recv_queue.get()
+
+            with self.raft_peer_state.lock:
+                # update terms from candidate
+                if self.raft_peer_state.current_term < one_recv_json_message_dict["sender_term"]:
+                    self.raft_peer_state.current_term = one_recv_json_message_dict["sender_term"]
+
             logger.debug( " processing one recv message " + str(one_recv_json_message_dict), extra = self.my_detail )
             #in json encode it is two element list
             #sendpeer_addr, peer_port = one_recv_json_message_dict["send_from"]
@@ -121,14 +128,17 @@ class RaftPeer:
             if one_recv_json_message_dict["vote_granted"] == True:
                 self.raft_peer_state.increment_leader_majority_count()
                 # check if got majority vote or not
-                self.raft_peer_state.elected_leader()
+                self.raft_peer_state.elected_leader(int(self.max_peer_number/2))
         logger.debug(" finished process_request_vote_reply " + str(one_recv_json_message_dict), extra=self.my_detail)
-
+        logger.debug(" raft_peer_state \n " + str(self.raft_peer_state), extra=self.my_detail)
 
     def process_request_vote(self, one_recv_json_message_dict):
         logger.debug(" starting process_request_vote " + str(one_recv_json_message_dict), extra=self.my_detail)
         # reply the candidate who sent the vote request to here
         with self.raft_peer_state.lock:
+            # if receive vote request from others means new election, should set self state to candidate,
+            # refuse incoming append entries
+            self.raft_peer_state.peer_state = "candidate"
             request_vote_receive = RequestVoteReceive(one_recv_json_message_dict, self.raft_peer_state)
             self.json_message_send_queue.put(request_vote_receive.process_request_vote())
         logger.debug(" finished process_request_vote " + str(one_recv_json_message_dict), extra=self.my_detail)
@@ -144,11 +154,13 @@ class RaftPeer:
 
     #[(ip => str, port => int)...]
     def connect_to_all_peer(self, peer_addr_port_tuple_list):
-        my_peer_addr_port_tuple = (self.my_detail['host'], int(self.my_detail['port']))
+        my_peer_addr_port_tuple = (str(self.my_detail['host']), int(self.my_detail['port']))
         #in referece remove
-        peer_addr_port_tuple_list.remove(my_peer_addr_port_tuple)
+        #peer_addr_port_tuple_list.remove(my_peer_addr_port_tuple)
         for one_peer_addr, one_peer_port in peer_addr_port_tuple_list:
-            self.connect_to_peer((one_peer_addr, one_peer_port))
+            if my_peer_addr_port_tuple == (str(one_peer_addr), int(one_peer_port)):
+                continue
+            self.connect_to_peer((str(one_peer_addr), int(one_peer_port)))
 
 
     def connect_to_peer(self, peer_addr_port_tuple):
@@ -186,8 +198,11 @@ class RaftPeer:
     def put_sent_to_all_peer_request_vote(self):
         logger.debug(" sending request vote to all peers as client ", extra = self.my_detail)
         with self.raft_peer_state.lock:
+            self.raft_peer_state.peer_state = "candidate"
             self.raft_peer_state.current_term += 1
-            for one_add_port_tuple, one_client_socket in self.peers_addr_client_socket:
+            # vote self
+            self.raft_peer_state.leader_majority_count = 1
+            for one_add_port_tuple in self.peers_addr_client_socket.keys():
                 self.json_message_send_queue.put(RequestVote(self.raft_peer_state, one_add_port_tuple).return_instance_vars_in_dict())
 
 
@@ -199,13 +214,14 @@ class RaftPeer:
     def send_to_peer(self, peer_addr_port_tuple, json_data_dict):
         logger.debug(" sending json_data to " + str(peer_addr_port_tuple), extra = self.my_detail)
         self._check_peer_in(peer_addr_port_tuple)
+        logger.debug(" sending json_data to " + str(self.peers_addr_client_socket), extra=self.my_detail)
         peer_socket = self.peers_addr_client_socket[peer_addr_port_tuple]
         try:
             serialized_json_data = json.dumps(json_data_dict)
             logger.debug(" json data serialization " + serialized_json_data, extra = self.my_detail)
             #send msg size
             #peer_socket.send(str.encode(str(len(serialized_json_data))+"\n", "utf-8"))
-            logger.debug(" json data sent len " + str(len(serialized_json_data)), extra = self.my_detail)
+            #logger.debug(" json data sent len " + str(len(serialized_json_data)), extra = self.my_detail)
             peer_socket.sendall(str.encode(serialized_json_data + "\n","utf-8"))
         except Exception as e:
             logger.debug(" json data serialization failed " + str(json_data_dict) + str(e), extra = self.my_detail)
@@ -224,7 +240,7 @@ class RaftPeer:
         peer_socket = self.peers_addr_listen_socket[peer_addr_port_tuple]
         msg = ""
         #could be wrong if msg size bigger than 1024, need further testing
-        for i in range(1):
+        while True:
             msg += peer_socket.recv(1024).decode("utf-8")
             if "\n" in msg:
                 msg_split_list = msg.split("\n")

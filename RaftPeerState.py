@@ -61,7 +61,7 @@ class RaftPeerState:
             temp_middle_vertical_line += str(elem) + " "
 
         middle_vertical_line += temp_middle_vertical_line
-        print( "=> " + str(middle_vertical_line))
+        #print( "=> " + str(middle_vertical_line))
 
         temp_header = "| " + str(data_name) + " "
         if len(temp_header) > max_len:
@@ -99,11 +99,7 @@ class RaftPeerState:
         state_str += self.top_horiozntal_line_with_middle_vertical_line(middle_vertical_line)
         state_str += middle_vertical_line + "\n"
 
-        middle_vertical_line = self.middle_vertical_line_msg([("my_addr_port", self.my_addr_port_tuple),
-                                                              ("current_term", self.current_term),
-                                                              ("vote_for", self.vote_for),
-                                                              ("commit_index", self.commit_index),
-                                                              ("last_apply", self.last_apply)])
+        middle_vertical_line = self.middle_vertical_line_msg(vars(self).items())
         state_str += self.top_horiozntal_line_with_middle_vertical_line(middle_vertical_line)
         state_str += middle_vertical_line + "\n"
 

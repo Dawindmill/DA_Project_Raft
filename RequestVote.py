@@ -5,7 +5,7 @@ logger = logging.getLogger("RequestVote")
 logger.setLevel(logging.WARN)
 class RequestVote:
     def __init__(self, raft_peer_state, send_to_addr_port_tuple):
-        self.received_reply = 0
+        #self.received_reply = 0
         self.msg_type = "request_vote"
         self.send_to = list(send_to_addr_port_tuple)
         self.send_from = list(raft_peer_state.my_addr_port_tuple)

@@ -8,6 +8,28 @@ Author: Bingfeng Liu
 Date: 16/04/2017
 '''
 
+def test_start_time_out_election():
+
+    peer1 = ("localhost", 1111)
+    peer2 = ("localhost", 2222)
+    peer_addr_port_tuple_list = [peer1, peer2]
+
+    peer1_raft = RaftPeer(peer1[0], peer1[1], "peer1")
+
+
+    peer2_raft = RaftPeer(peer2[0], peer2[1], "peer2")
+
+
+    peer_raft_list = [peer1_raft, peer2_raft]
+
+    for one_peer_raft in peer_raft_list:
+        one_peer_raft.connect_to_all_peer(peer_addr_port_tuple_list)
+
+    peer1_raft.start_raft_peer()
+    peer2_raft.start_raft_peer()
+
+    time.sleep(10)
+
 def test_print_raft_peer_state():
     peer_state = RaftPeerState(("localhost", 1111))
     peer_state.state_log = [123,123,123]
@@ -128,4 +150,6 @@ def test_time_counter():
 
 #test_sleep_time()
 
-test_time_counter()
+#test_time_counter()
+
+test_start_time_out_election()

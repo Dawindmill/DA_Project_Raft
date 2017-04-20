@@ -21,7 +21,10 @@ class RequestVoteReceive:
                                "send_to": list(self.send_from),
                                "send_from": list(self.raft_peer_state.my_addr_port_tuple),
                                "sender_term": self.raft_peer_state.current_term,
-                               "vote_grantned": True}
+                               "vote_granted": True}
+        # if this peer has no log, there is no any peer could have worst log than it
+        if len(self.raft_peer_state.state_log) == 0:
+            return request_vote_result
 
         if self.raft_peer_state.current_term > self.candidate_term:
             request_vote_result["vote_grantned"] = False
@@ -33,6 +36,7 @@ class RequestVoteReceive:
             return request_vote_result
 
         #at least up to date is fine?
+        #ini last_log_index is -1 and state_log len is 0
         if (len(self.raft_peer_state.state_log) -1) >= self.last_log_index:
             if self.raft_peer_state.state_log[self.last_log_index].term > self.last_log_term:
                 request_vote_result["vote_grantned"] = False
