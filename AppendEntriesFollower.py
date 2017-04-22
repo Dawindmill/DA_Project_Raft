@@ -8,7 +8,6 @@ class AppendEntriesFollower:
         self.host_port_dict = {"host":str(raft_peer_state.my_addr_port_tuple[0]),
                                "port":str(raft_peer_state.my_addr_port_tuple[1]),
                                "peer_id":str(raft_peer_state.peer_id)}
-        self.append_entries_type = "follower_receive"
         self.leader_term = append_entries_json_data_dict["sender_term"]
         self.leader_id = append_entries_json_data_dict["peer_id"]
         self.prev_log_index = int(append_entries_json_data_dict["prev_log_index"])
@@ -23,10 +22,17 @@ class AppendEntriesFollower:
     #for follower to process received append entries and return result as dict
 
     def process_append_entries(self):
-        if self.append_entries_type == "leader_send":
-            logger.debug(" leader shouldn't process append entries ", extra = self.host_port_dict)
-        result = {"log_index_start": self.new_entries[0].index,
-                  "log_index_end": self.new_entries[-1].index,
+
+        # meet heartbeat append entries
+        if self.new_entries == 0:
+            log_index_start = -1
+            log_index_end = -1
+        else:
+            log_index_start = self.new_entries[0].index,
+            log_index_end = self.new_entries[-1].index,
+
+        result = {"log_index_start": log_index_start,
+                  "log_index_end": log_index_end,
                   "send_from": list(self.raft_peer_state.my_addr_port_tuple),
                   "send_to": list(self.send_from),
                   "sender_term":self.raft_peer_state.current_term,

@@ -7,8 +7,8 @@ logger.setLevel(logging.WARN)
 class RequestVoteReceive:
     def __init__(self, request_vote_json_dict, raft_peer_state):
         self.msg_type = request_vote_json_dict["msg_type"]
-        self.send_from = request_vote_json_dict["send_from"]
-        self.send_to = request_vote_json_dict["send_to"]
+        self.send_from = tuple(request_vote_json_dict["send_from"])
+        self.send_to = tuple(request_vote_json_dict["send_to"])
         self.candidate_term = request_vote_json_dict["sender_term"]
         self.candidate_id = request_vote_json_dict["peer_id"]
         self.last_log_index = request_vote_json_dict["last_log_index"]
@@ -26,13 +26,17 @@ class RequestVoteReceive:
         if len(self.raft_peer_state.state_log) == 0:
             return request_vote_result
 
+        if self.raft_peer_state.vote_for == None:
+            request_vote_result["vote_granted"] = False
+            return request_vote_result
+
         if self.raft_peer_state.current_term > self.candidate_term:
-            request_vote_result["vote_grantned"] = False
+            request_vote_result["vote_granted"] = False
             return request_vote_result
 
         #put a lock here?
         if self.raft_peer_state.vote_for != None:
-            request_vote_result["vote_grantned"] = False
+            request_vote_result["vote_granted"] = False
             return request_vote_result
 
         #at least up to date is fine?
@@ -41,4 +45,7 @@ class RequestVoteReceive:
             if self.raft_peer_state.state_log[self.last_log_index].term > self.last_log_term:
                 request_vote_result["vote_grantned"] = False
                 return request_vote_result
+
+        
+        self.raft_peer_state.vote_for = self.send_from
         return request_vote_result

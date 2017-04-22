@@ -25,6 +25,10 @@ class RaftPeerState:
         self.peer_state = "follower"
         self.leader_majority_count = 0
 
+    def initialize_peers_next_and_match_index(self, peers_addr_port_tuple_list):
+        last_index = len(self.state_log) - 1
+        self.peers_next_index = {peer_addr_port_tuple:last_index for peer_addr_port_tuple in peers_addr_port_tuple_list}
+        self.peers_next_index = {peer_addr_port_tuple:0 for peer_addr_port_tuple in peers_addr_port_tuple_list}
     def increment_leader_majority_count(self):
         if self.peer_state == "candidate":
             self.leader_majority_count += 1
@@ -33,6 +37,7 @@ class RaftPeerState:
         if self.leader_majority_count >= majority and self.peer_state == "candidate":
             self.peer_state = "leader"
             self.leader_majority_count = 0
+
 
 
     def top_horizontal_line_with_num(self, max_length):
