@@ -24,7 +24,7 @@ class AppendEntriesFollower:
     def process_append_entries(self):
 
         # meet heartbeat append entries
-        if self.new_entries == 0:
+        if len(self.new_entries) == 0:
             log_index_start = -1
             log_index_end = -1
         else:

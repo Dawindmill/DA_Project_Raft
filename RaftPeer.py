@@ -11,6 +11,7 @@ from RequestVote import  RequestVote
 from RequestVoteReceive import  RequestVoteReceive
 from AppendEntriesFollower import  AppendEntriesFollower
 from AppendEntriesLeader import  AppendEntriesLeader
+import time
 
 '''
 Author: Bingfeng Liu
@@ -64,7 +65,6 @@ class RaftPeer:
             logger.debug( " start thread => process_json_message_recv_queue successful ", extra = self.my_detail)
             _thread.start_new_thread(self.accept, ())
             logger.debug( " start thread => accept successful ", extra = self.my_detail)
-
         except Exception as e:
             logger.debug( "Error: unable to start processing threads " + str(e), extra = self.my_detail)
 
@@ -104,21 +104,35 @@ class RaftPeer:
             receive_processing_functions = {"append_entries_follower_reply":self.process_append_entries_follower_reply,
                                             "append_entries_leader":self.process_append_entries_leader,
                                             "request_vote_reply":self.process_request_vote_reply,
-                                            "request_vote":self.process_request_vote}
+                                            "request_vote":self.process_request_vote,
+                                            "request_command": self.process_receive_command}
             receive_processing_function = receive_processing_functions[one_recv_json_message_type]
             receive_processing_function(one_recv_json_message_dict)
+
+    def process_receive_command(self):
+        print()
+
+
 
     def process_append_entries_follower_reply(self, one_recv_json_message_dict):
         logger.debug(" starting process_append_entries_follower_reply " + str(one_recv_json_message_dict), extra=self.my_detail)
         log_index_start = one_recv_json_message_dict["log_index_start"]
         log_index_end = one_recv_json_message_dict["log_index_end"]
-        with self.raft_peer_state.lock:
-            for one_log in self.raft_peer_state.state_log[log_index_start,log_index_end + 1]:
-                one_log.majority_count += 1
-                one_log.apply_log()
+        if one_recv_json_message_dict["append_entries_result"] == True:
+            logger.debug(" starting process_append_entries_follower_reply True" + str(one_recv_json_message_dict),
+                         extra=self.my_detail)
+            with self.raft_peer_state.lock:
+                for one_log in self.raft_peer_state.state_log[log_index_start,log_index_end + 1]:
+                    one_log.majority_count += 1
+                    one_log.apply_log()
+        else:
+            logger.debug(" starting process_append_entries_follower_reply False" + str(one_recv_json_message_dict),
+                         extra=self.my_detail)
+            with self.raft_peer_state.lock:
+                self.raft_peer_state.peers_next_index[tuple(one_recv_json_message_dict["send_from"])] -= 1
+                append_entries_leader = AppendEntriesLeader(self.raft_peer_state, one_recv_json_message_dict["send_from"], "append")
+                self.json_message_send_queue.put(append_entries_leader.return_instance_vars_in_dict())
         logger.debug(" finished process_append_entries_follower_reply " + str(one_recv_json_message_dict), extra=self.my_detail)
-
-
 
     def process_append_entries_leader(self, one_recv_json_message_dict):
         # sent from leader, received by this follower to append entry
@@ -171,10 +185,18 @@ class RaftPeer:
         my_peer_addr_port_tuple = (str(self.my_detail['host']), int(self.my_detail['port']))
         # in referece remove
         # peer_addr_port_tuple_list.remove(my_peer_addr_port_tuple)
+
         for one_peer_addr, one_peer_port in peer_addr_port_tuple_list:
             if my_peer_addr_port_tuple == (str(one_peer_addr), int(one_peer_port)):
                 continue
-            self.connect_to_peer((str(one_peer_addr), int(one_peer_port)))
+            while True:
+                try:
+                    self.connect_to_peer((str(one_peer_addr), int(one_peer_port)))
+                    break
+                except Exception as e:
+                    logger.debug("raft peer connect to " + str(one_peer_addr, one_peer_port) + " failed retry, exception => " + str(e), extra=self.my_detail)
+                    time.sleep(0.01)
+        logger.debug("raft peer connect to all peers successful", extra=self.my_detail)
 
     def connect_to_peer(self, peer_addr_port_tuple):
         # use to send message to other peers
