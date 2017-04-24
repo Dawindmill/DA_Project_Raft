@@ -29,7 +29,7 @@ class RaftPeer:
     #thread safe queue FIFO
     #https://docs.python.org/2/library/queue.html
 
-    def __init__(self, host, port, peer_id):
+    def __init__(self, host, port, user_port, peer_id):
         self.max_peer_number = 2
         self.my_addr_port_tuple = (host, port)
         self.peer_id = peer_id
@@ -41,6 +41,15 @@ class RaftPeer:
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.socket.bind((host, port))
         self.socket.listen(self.backlog)
+
+        self.user_socket = socket.socket()
+        self.user_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.user_socket.bind((host, user_port))
+        self.user_socket.listen(self.backlog)
+
+        #use to store current user socket
+        self.user_addr_listen_socket = {}
+
         #key is peer_addr => (ip, port)
         #used to rec message
         self.peers_addr_listen_socket = {}
@@ -63,8 +72,13 @@ class RaftPeer:
             logger.debug( " start thread => process_json_message_send_queue successful ", extra = self.my_detail)
             _thread.start_new_thread(self.process_json_message_recv_queue, ())
             logger.debug( " start thread => process_json_message_recv_queue successful ", extra = self.my_detail)
-            _thread.start_new_thread(self.accept, ())
-            logger.debug( " start thread => accept successful ", extra = self.my_detail)
+            _thread.start_new_thread(self.accept, (self.socket, self.peers_addr_listen_socket,))
+            logger.debug( " start thread => accept peer servers successful ", extra = self.my_detail)
+
+            _thread.start_new_thread(self.accept, (self.user_socket, self.user_addr_listen_socket,))
+            logger.debug( " start thread => accept user successful ", extra = self.my_detail)
+
+
         except Exception as e:
             logger.debug( "Error: unable to start processing threads " + str(e), extra = self.my_detail)
 
@@ -79,20 +93,22 @@ class RaftPeer:
 
             with self.raft_peer_state.lock:
                 # update terms from candidate
-                if  one_recv_json_message_dict["sender_term"] > self.raft_peer_state.current_term :
-                    self.raft_peer_state.current_term = one_recv_json_message_dict["sender_term"]
-                    #current term is outdate, so if it starts voting need to stop immediately
-                    # term will reject the previous voting request actually
-                    self.raft_peer_state.peer_state = "follower"
-                    self.raft_peer_state.leader_majority_count = 0
-                    # every new term clear old vote_for, might experience new term election
-                    self.raft_peer_state.vote_for = None
+
+                if one_recv_json_message_dict["msg_type"] not in ["request_command"]:
+                    if  one_recv_json_message_dict["sender_term"] > self.raft_peer_state.current_term :
+                        self.raft_peer_state.current_term = one_recv_json_message_dict["sender_term"]
+                        #current term is outdate, so if it starts voting need to stop immediately
+                        # term will reject the previous voting request actually
+                        self.raft_peer_state.peer_state = "follower"
+                        self.raft_peer_state.leader_majority_count = 0
+                        # every new term clear old vote_for, might experience new term election
+                        self.raft_peer_state.vote_for = None
 
 
-                if one_recv_json_message_dict["sender_term"] < self.raft_peer_state.current_term:
-                    logger.debug(" received outdated term msg abort " + str(one_recv_json_message_dict),
-                                 extra=self.my_detail)
-                    continue
+                    if one_recv_json_message_dict["sender_term"] < self.raft_peer_state.current_term:
+                        logger.debug(" received outdated term msg abort " + str(one_recv_json_message_dict),
+                                     extra=self.my_detail)
+                        continue
 
             logger.debug( " processing one recv message " + str(one_recv_json_message_dict), extra = self.my_detail )
             #in json encode it is two element list
@@ -105,12 +121,12 @@ class RaftPeer:
                                             "append_entries_leader":self.process_append_entries_leader,
                                             "request_vote_reply":self.process_request_vote_reply,
                                             "request_vote":self.process_request_vote,
-                                            "request_command": self.process_receive_command}
+                                            "request_command": self.process_request_command}
             receive_processing_function = receive_processing_functions[one_recv_json_message_type]
             receive_processing_function(one_recv_json_message_dict)
 
-    def process_receive_command(self):
-        print()
+    def process_request_command(self, one_recv_json_message_type):
+        
 
 
 
@@ -205,11 +221,12 @@ class RaftPeer:
         client_socket.connect(peer_addr_port_tuple)
         self.peers_addr_client_socket[peer_addr_port_tuple] = client_socket
 
-    def accept(self):
+    # listen from user and other peer servers
+    def accept(self, socket, peers_addr_listen_socket):
         while True:
-            peer_socket, peer_addr_port_tuple = self.socket.accept()
+            peer_socket, peer_addr_port_tuple = socket.accept()
             # peer_addr => (ip, port)
-            self.peers_addr_listen_socket[peer_addr_port_tuple] = peer_socket
+            peers_addr_listen_socket[peer_addr_port_tuple] = peer_socket
             logger.debug(" recv socket from " + str(peer_addr_port_tuple), extra = self.my_detail)
             try:
                 _thread.start_new_thread(self.receive_from_one_peer_newline_delimiter, (peer_addr_port_tuple, ))
@@ -253,19 +270,37 @@ class RaftPeer:
 
     def send_to_peer(self, peer_addr_port_tuple, json_data_dict):
         logger.debug(" sending json_data to " + str(peer_addr_port_tuple), extra = self.my_detail)
-        self._check_peer_in(peer_addr_port_tuple)
+        # self._check_peer_in(peer_addr_port_tuple)
         logger.debug(" sending json_data to " + str(self.peers_addr_client_socket), extra=self.my_detail)
-        peer_socket = self.peers_addr_client_socket[peer_addr_port_tuple]
+
+        # sent to user
+        if json_data_dict["msg_type"] in ["request_command_reply"]:
+            peer_socket = self.user_addr_listen_socket[peer_addr_port_tuple]
+        else:
+            peer_socket = self.peers_addr_client_socket[peer_addr_port_tuple]
         try:
             serialized_json_data = json.dumps(json_data_dict)
             logger.debug(" json data serialization " + serialized_json_data, extra = self.my_detail)
             #send msg size
             #peer_socket.send(str.encode(str(len(serialized_json_data))+"\n", "utf-8"))
             #logger.debug(" json data sent len " + str(len(serialized_json_data)), extra = self.my_detail)
-            peer_socket.sendall(str.encode(serialized_json_data + "\n","utf-8"))
         except Exception as e:
             logger.debug(" json data serialization failed " + str(json_data_dict) + str(e), extra = self.my_detail)
+            return
         #make it utf8r
+        try:
+            peer_socket.sendall(str.encode(serialized_json_data + "\n", "utf-8"))
+        except Exception as e:
+            # reconnect to peer
+            # not reconnecing client because they might change network
+            if peer_addr_port_tuple in self.peers_addr_client_socket:
+                logger.debug(" json data serialization sent failed reconnect to peer " + str(json_data_dict) + str(e) + " " + str(
+                    peer_addr_port_tuple), extra=self.my_detail)
+                self.connect_to_peer(peer_addr_port_tuple)
+                # put json back
+                self.json_message_send_queue.put(json_data_dict)
+            else:
+                logger.debug(" json data serialization sent failed  user abort" + str(json_data_dict) + str(e) + " " + str(peer_addr_port_tuple) , extra = self.my_detail)
 
 
     def receiv_from_all_peer(self):

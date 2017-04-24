@@ -14,9 +14,11 @@ class LogData:
         self.log_committed = committed
         #only leader keep track of this, do not send this to other peers?
         self.majority_count = 0
+        self.request_user_addr_port_tuple = None
     def __str__(self):
         return_dict_str = vars(self)
         return_dict_str.pop("majority_count")
+        return_dict_str.pop("request_user_addr_port_tuple")
         return str(return_dict_str)
 
     def apply_log(self, majority):
