@@ -93,10 +93,8 @@ class User:
                     continue
                 else:
                     command_send_json_dict = {"msg_type": "request_command",
-                                     "var_name": temp_input_list[0],
-                                     "command_name": temp_input_list[1],
-                                     "action_param": temp_input_list[2],
-                                     "send_from": list(leader_socket.getsockname())}
+                                              "request_command_list": temp_input_list,
+                                              "send_from": list(leader_socket.getsockname())}
                     break
             self.json_message_send_queue.put(command_send_json_dict)
 
@@ -188,7 +186,6 @@ class User:
                         logger.debug(" put one json_data " + one_json_msg, extra = self.my_detail)
                     except Exception as e:
                         logger.debug( " deserialization recv json data failed " + str(e), extra = self.my_detail)
-        logger.debug( " receive_from_one_peer_newline_delimiter terminated " + str(peer_addr_port_tuple), extra = self.my_detail)
 
 
 if __name__:
