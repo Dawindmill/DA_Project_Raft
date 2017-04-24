@@ -11,6 +11,7 @@ from RequestVote import  RequestVote
 from RequestVoteReceive import  RequestVoteReceive
 from AppendEntriesFollower import  AppendEntriesFollower
 from AppendEntriesLeader import  AppendEntriesLeader
+from RemoteVar import  RemoteVar
 import time
 
 '''
@@ -30,6 +31,10 @@ class RaftPeer:
     #https://docs.python.org/2/library/queue.html
 
     def __init__(self, host, port, user_port, peer_id):
+
+        # user perform actions on
+        self.remote_var = RemoteVar()
+
         self.max_peer_number = 2
         self.my_addr_port_tuple = (host, port)
         self.peer_id = peer_id
@@ -126,9 +131,12 @@ class RaftPeer:
             receive_processing_function(one_recv_json_message_dict)
 
     def process_request_command(self, one_recv_json_message_type):
-        
-
-
+        with self.raft_peer_state.lock:
+            temp_log = LogData(len(self.raft_peer_state.state_log),
+                               self.raft_peer_state.current_term,
+                               one_recv_json_message_type["request_command_list"],
+                               (one_recv_json_message_type["send_from"]))
+            self.raft_peer_state.state_log.append(temp_log)
 
     def process_append_entries_follower_reply(self, one_recv_json_message_dict):
         logger.debug(" starting process_append_entries_follower_reply " + str(one_recv_json_message_dict), extra=self.my_detail)
@@ -138,6 +146,13 @@ class RaftPeer:
             logger.debug(" starting process_append_entries_follower_reply True" + str(one_recv_json_message_dict),
                          extra=self.my_detail)
             with self.raft_peer_state.lock:
+                # match index can only increase, so we only record when it is true, it is always one less than nextIndex
+                # could be used to optimize finding right nextIndex? let's see later
+                self.raft_peer_state.peers_match_index[tuple(one_recv_json_message_dict["send_from"])] = self.raft_peer_state.peers_next_index[tuple(one_recv_json_message_dict["send_from"])]
+
+                # increase this peer's next index
+                self.raft_peer_state.peers_next_index[tuple(one_recv_json_message_dict["send_from"])] += 1
+
                 for one_log in self.raft_peer_state.state_log[log_index_start,log_index_end + 1]:
                     one_log.majority_count += 1
                     one_log.apply_log()
@@ -146,8 +161,8 @@ class RaftPeer:
                          extra=self.my_detail)
             with self.raft_peer_state.lock:
                 self.raft_peer_state.peers_next_index[tuple(one_recv_json_message_dict["send_from"])] -= 1
-                append_entries_leader = AppendEntriesLeader(self.raft_peer_state, one_recv_json_message_dict["send_from"], "append")
-                self.json_message_send_queue.put(append_entries_leader.return_instance_vars_in_dict())
+                #append_entries_leader = AppendEntriesLeader(self.raft_peer_state, one_recv_json_message_dict["send_from"], "append")
+                #self.json_message_send_queue.put(append_entries_leader.return_instance_vars_in_dict())
         logger.debug(" finished process_append_entries_follower_reply " + str(one_recv_json_message_dict), extra=self.my_detail)
 
     def process_append_entries_leader(self, one_recv_json_message_dict):
@@ -259,8 +274,14 @@ class RaftPeer:
     def put_sent_to_all_peer_append_entries_heart_beat(self):
         logger.debug(" sending append entries heart beats to all peers as client ", extra = self.my_detail)
         with self.raft_peer_state.lock:
+            log_len = len(self.raft_peer_state.state_log)
             for one_add_port_tuple in self.peers_addr_client_socket.keys():
-                append_entries_heart_beat_leader = AppendEntriesLeader(self.raft_peer_state, one_add_port_tuple, "heartbeat").return_instance_vars_in_dict()
+                # this peer is uptodate and we have no new entries just send empty heartbeat
+                if self.raft_peer_state.peers_next_index[one_add_port_tuple] == log_len or self.raft_peer_state.peers_match_index == (log_len - 1):
+                    append_entries_heart_beat_leader = AppendEntriesLeader(self.raft_peer_state, one_add_port_tuple, "heartbeat").return_instance_vars_in_dict()
+                else:
+                    append_entries_heart_beat_leader = AppendEntriesLeader(self.raft_peer_state, one_add_port_tuple, "append").return_instance_vars_in_dict()
+
                 self.json_message_send_queue.put(append_entries_heart_beat_leader)
 
     def sent_to_all_peer(self, json_data_dict):

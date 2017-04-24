@@ -17,9 +17,10 @@ class TimeoutCounter:
         self.time_out_const = time_out
         self.last = 0
         self.sleep_time = 0.001
-        self.append_entries_heart_beat_time_out = 0.02
+        # send heat beat in 10 ms
+        self.append_entries_heart_beat_time_out = 0.01
 
-    def start_election_time_out(self, time_out, action_func):
+    def start_time_out(self, time_out, action_func):
         last = time.time()
         time.sleep(self.sleep_time)
         gap = time.time() - self.last
@@ -39,9 +40,9 @@ class TimeoutCounter:
         self.last =time.time()
         while True:
             if raft_peer.raft_peer_state.peer_state == "leader":
-                self.start_election_time_out(self.append_entries_heart_beat_time_out, raft_peer.put_sent_to_all_peer_append_entries_heart_beat)
+                self.start_time_out(self.append_entries_heart_beat_time_out, raft_peer.put_sent_to_all_peer_append_entries_heart_beat)
             else:
-                self.start_election_time_out(self.time_out, raft_peer.put_sent_to_all_peer_request_vote)
+                self.start_time_out(self.time_out, raft_peer.put_sent_to_all_peer_request_vote)
     def reset_timeout(self):
         with self.lock:
             self.time_out = self.time_out_const
