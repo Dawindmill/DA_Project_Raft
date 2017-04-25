@@ -34,7 +34,7 @@ class TimeoutCounter:
                 self.time_out = time_out
                 # will dead lock if called it inside
                 # self.time_out = self.time_out_const
-                logger.debug(" " + timeout_type + " ", extra=self.my_detial)
+                logger.debug( " " + str(self.time_out) + timeout_type + " ", extra=self.my_detial)
                 action_func()
                 # if self.time_out <= 0:
 
@@ -47,6 +47,6 @@ class TimeoutCounter:
                 self.start_time_out(self.time_out_const, raft_peer.put_sent_to_all_peer_request_vote, "election time out")
 
     def reset_timeout(self):
-        with self.lock:
-            self.time_out = self.time_out_const
-            logger.debug(" time_out reset => " + str(self.time_out), extra=self.my_detial)
+        #with self.lock: will get dead lock here
+        self.time_out = self.time_out_const
+        logger.debug(" time_out reset => " + str(self.time_out), extra=self.my_detial)

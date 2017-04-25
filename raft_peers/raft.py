@@ -15,6 +15,10 @@ Author: Bingfeng Liu
 Date: 16/04/2017
 '''
 
+def test_take_user_request_three():
+    test_start_time_out_election_three()
+
+
 def test_start_time_out_election_three():
 
     peer1 = ("localhost", 1111)
@@ -45,7 +49,7 @@ def test_start_time_out_election_three():
     for one_peer_raft in peer_raft_list:
         one_peer_raft.start_raft_peer()
 
-    time.sleep(100)
+    time.sleep(1000)
 
 
 
@@ -211,4 +215,5 @@ def test_time_counter():
 #test_time_counter()
 if __name__ == '__main__':
     #test_start_time_out_election_three()
-    test_start_time_out_election_five()
+    #test_start_time_out_election_five()
+    test_take_user_request_three()

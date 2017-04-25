@@ -5,9 +5,13 @@ Created Date: 18/04/2017
 import _thread
 import threading
 from LogData import LogData
+from RemoteVar import  RemoteVar
 
 class RaftPeerState:
     def __init__(self, addr_port_tuple, peer_id):
+        # user perform actions on
+        self.remote_var = RemoteVar()
+
         # self.lock = _thread.allocate_lock()
         self.lock = threading.RLock()
         self.peer_id = peer_id

@@ -72,8 +72,7 @@ class AppendEntriesFollower:
         for one_new_log in self.new_entries:
             one_new_log_data = LogData(one_new_log["log_index"],
                                        one_new_log["log_term"],
-                                       one_new_log["request_command_action_list"],
-                                       one_new_log["log_committed"])
+                                       one_new_log["request_command_action_list"])
             #if follower is not longer than leader
             if self.prev_log_index == (len(self.raft_peer_state.state_log) - 1):
                 self.raft_peer_state.state_log.append(one_new_log_data)
@@ -84,7 +83,9 @@ class AppendEntriesFollower:
 
     def process_commit_index(self, commit_index):
         for one_log_data in self.raft_peer_state.state_log[0:commit_index]:
-            one_log_data.log_committed = True
+            if one_log_data.log_applied == False:
+                self.raft_peer_state.remote_var.perform_action(one_log_data.request_command_action_list)
+                one_log_data.log_applied = True
         self.raft_peer_state.last_apply = commit_index
 
     def __str__(self):

@@ -10,7 +10,9 @@ import socket
 import logging
 import json
 from queue import Queue
+from collections import deque
 import _thread
+import threading
 import ast
 
 FORMAT = '[%(module)s][%(asctime)-15s][%(levelname)s][%(peer_id)s][%(host)s][%(port)s][%(funcName)s] %(message)s'
@@ -20,7 +22,7 @@ logger = logging.getLogger("User")
 class User:
     def __init__(self, servers_addr_port_list):
         self.first_start = True
-        self.lock = _thread.allocate_lock()
+        self.lock = threading.RLock()
         self.my_addr_port = None
         self.leader_socket = None
         # socket.socket() only return (socket, addr_port_tuple) => addr_port_tuple is self's
@@ -40,39 +42,43 @@ class User:
             logger.debug( " start thread => process_json_message_send_queue successful ", extra = self.my_detail)
             _thread.start_new_thread(self.process_json_message_recv_queue, ())
             logger.debug( " start thread => process_json_message_recv_queue successful ", extra = self.my_detail)
-            _thread.start_new_thread(self.take_user_input, ())
-            logger.debug(" start thread => take_user_input successful ", extra=self.my_detail)
+            self.input_thread = None #_thread.start_new_thread(self.take_user_input, ())
+            #logger.debug(" start thread => take_user_input successful ", extra=self.my_detail)
             _thread.start_new_thread(self.receive_from_one_peer_newline_delimiter, ())
             logger.debug(" start thread => receive_from_one_peer_newline_delimiter successful ", extra=self.my_detail)
         except Exception as e:
             logger.debug( "Error: unable to start processing threads " + str(e), extra = self.my_detail)
 
         logger.debug(" start connect_to_next_peer ", extra=self.my_detail)
+        self.connect_to_next_peer()
         # self.connect_to_next_peer()
 
     def connect_to_next_peer(self):
         print("Connecting to leader ... ")
+        are_you_leader = {"msg_type": "request_command",
+                          "request_command_list":[]}
         with self.lock:
+            if self.input_thread is not None:
+                self.input_thread.exit()
+                self.input_thread = None
             self.json_message_send_queue.empty()
             self.leader_socket = None
-
-        while True:
             self.peer_connection_index += 1
             if self.peer_connection_index >= len(self.servers_addr_port_list):
                 self.peer_connection_index = 0
             try:
                 leader_socket = socket.socket()
                 leader_socket.connect(self.servers_addr_port_list[self.peer_connection_index])
-                with self.lock:
-                    self.leader_socket = leader_socket
-                break
+                are_you_leader["send_to"] = list(leader_socket.getpeername())
+                are_you_leader["send_from"] = list(leader_socket.getsockname())
+                self.leader_socket = leader_socket
+                self.json_message_send_queue.put(are_you_leader)
             except Exception as e:
                 logger.debug("Error: unable to connect " + str(self.servers_addr_port_list[self.peer_connection_index]) + ", exception => " + str(e), extra=self.my_detail)
-                time.sleep(0.01)
-            print ("Found leader :], " + str(leader_socket))
+        print ("Try find leader :], " + str(leader_socket))
 
     def take_user_input(self):
-        self.connect_to_next_peer()
+        #self.connect_to_next_peer()
         print("Enter your command as a list [var_name, command_name， action_param]")
         while True:
             temp_input_list = input("$ ")
@@ -123,8 +129,11 @@ class User:
         if one_recv_json_message_dict["command_result"] == "not_leader":
             print(one_recv_json_message_dict["command_result"] + " finding leaders now")
             self.connect_to_next_peer()
+        elif one_recv_json_message_dict["command_result"] == "is_leader":
+            print("leader found " + self.leader_socket)
+            self.input_thread = _thread.start_new_thread(self.take_user_input(), ())
         else:
-            print(one_recv_json_message_dict["command_result"])
+            print(" command result => " + str(one_recv_json_message_dict["command_result"]))
 
 
     def send_to_peer(self, json_data_dict):
@@ -146,9 +155,10 @@ class User:
             return
         try:
             peer_socket.sendall(str.encode(serialized_json_data + "\n","utf-8"))
-
         except Exception as e:
-            print(" command send failed, command abort, remote connection closed")
+            if "request_command" in json_data_dict:
+                if json_data_dict["request_command_list"] != []:
+                    print(" command send failed, plz try again when found leader, remote connection closed")
             logger.debug("send failed " + str(json_data_dict) + str(e), extra=self.my_detail)
 
         #make it utf8r
@@ -166,6 +176,7 @@ class User:
 
             if peer_socket == None:
                 logger.debug(" no leader socket now, abort receiving ", extra=self.my_detail)
+                time.sleep(0.1)
                 continue
             try:
                 msg += peer_socket.recv(1024).decode("utf-8")
@@ -189,12 +200,13 @@ class User:
 
 
 if __name__ == '__main__':
-    peer1 = ("localhost", 1111)
-    peer2 = ("localhost", 2222)
-    peer3 = ("localhost", 3333)
-    peer4 = ("localhost", 4444)
-    peer5 = ("localhost", 5555)
+    peer1 = ("localhost", 1119)
+    peer2 = ("localhost", 2229)
+    peer3 = ("localhost", 3339)
+    peer4 = ("localhost", 4449)
+    peer5 = ("localhost", 5559)
 
-    peer_addr_port_tuple_list = [peer1, peer2, peer3, peer4, peer5]
+    # peer_addr_port_tuple_list = [peer1, peer2, peer3, peer4, peer5]
+    peer_addr_port_tuple_list = [peer1, peer2, peer3]
     user = User(peer_addr_port_tuple_list)
     time.sleep(10000000)
