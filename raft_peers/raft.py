@@ -15,7 +15,7 @@ Author: Bingfeng Liu
 Date: 16/04/2017
 '''
 
-def test_start_time_out_election():
+def test_start_time_out_election_three():
 
     peer1 = ("localhost", 1111)
     peer2 = ("localhost", 2222)
@@ -38,6 +38,47 @@ def test_start_time_out_election():
 
 
     peer_raft_list = [peer1_raft, peer2_raft, peer3_raft]
+
+    for one_peer_raft in peer_raft_list:
+        one_peer_raft.connect_to_all_peer(peer_addr_port_tuple_list)
+
+    for one_peer_raft in peer_raft_list:
+        one_peer_raft.start_raft_peer()
+
+    time.sleep(100)
+
+
+
+def test_start_time_out_election_five():
+
+    peer1 = ("localhost", 1111)
+    peer2 = ("localhost", 2222)
+    peer3 = ("localhost", 3333)
+    peer4 = ("localhost", 4444)
+    peer5 = ("localhost", 5555)
+
+    peer1_user = 1119
+    peer2_user = 2229
+    peer3_user = 3339
+    peer4_user = 4449
+    peer5_user = 5559
+
+
+    peer_addr_port_tuple_list = [peer1, peer2, peer3, peer4, peer5]
+
+    peer_num = len(peer_addr_port_tuple_list)
+
+    peer1_raft = RaftPeer(peer1[0], peer1[1], peer1_user, "peer1", peer_num)
+
+    peer2_raft = RaftPeer(peer2[0], peer2[1], peer2_user, "peer2", peer_num)
+
+    peer3_raft = RaftPeer(peer3[0], peer3[1], peer3_user, "peer3", peer_num)
+
+    peer4_raft = RaftPeer(peer4[0], peer4[1], peer4_user, "peer4", peer_num)
+    peer5_raft = RaftPeer(peer5[0], peer5[1], peer5_user, "peer5", peer_num)
+
+
+    peer_raft_list = [peer1_raft, peer2_raft, peer3_raft, peer4_raft, peer5_raft]
 
     for one_peer_raft in peer_raft_list:
         one_peer_raft.connect_to_all_peer(peer_addr_port_tuple_list)
@@ -169,4 +210,5 @@ def test_time_counter():
 
 #test_time_counter()
 if __name__ == '__main__':
-    test_start_time_out_election()
+    #test_start_time_out_election_three()
+    test_start_time_out_election_five()

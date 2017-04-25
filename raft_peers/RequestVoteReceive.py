@@ -29,7 +29,7 @@ class RequestVoteReceive:
         if len(self.raft_peer_state.state_log) == 0:
             return request_vote_result
 
-        if self.raft_peer_state.vote_for == None:
+        if self.raft_peer_state.vote_for != None:
             request_vote_result["vote_granted"] = False
             return request_vote_result
 

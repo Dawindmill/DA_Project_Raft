@@ -20,7 +20,7 @@ class TimeoutCounter:
         # send heat beat in 10 ms
         self.append_entries_heart_beat_time_out = 0.01
 
-    def start_time_out(self, time_out, action_func):
+    def start_time_out(self, time_out, action_func, timeout_type):
 
         # logger.debug(" gap => " + str(gap), extra = self.my_detial)
         with self.lock:
@@ -34,7 +34,7 @@ class TimeoutCounter:
                 self.time_out = time_out
                 # will dead lock if called it inside
                 # self.time_out = self.time_out_const
-                logger.debug(" time_out ", extra=self.my_detial)
+                logger.debug(" " + timeout_type + " ", extra=self.my_detial)
                 action_func()
                 # if self.time_out <= 0:
 
@@ -42,9 +42,9 @@ class TimeoutCounter:
         logger.debug(" counter started ", extra=self.my_detial)
         while True:
             if raft_peer.raft_peer_state.peer_state == "leader":
-                self.start_time_out(self.append_entries_heart_beat_time_out, raft_peer.put_sent_to_all_peer_append_entries_heart_beat)
+                self.start_time_out(self.append_entries_heart_beat_time_out, raft_peer.put_sent_to_all_peer_append_entries_heart_beat, "append heart beat time out")
             else:
-                self.start_time_out(self.time_out_const, raft_peer.put_sent_to_all_peer_request_vote)
+                self.start_time_out(self.time_out_const, raft_peer.put_sent_to_all_peer_request_vote, "election time out")
 
     def reset_timeout(self):
         with self.lock:

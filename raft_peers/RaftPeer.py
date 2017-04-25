@@ -70,7 +70,7 @@ class RaftPeer:
         self.raft_peer_state = RaftPeerState(self.my_addr_port_tuple, self.peer_id)
         # btw 100ms - 150ms
         # random_timeout = random.randint(100, 150)/1000
-        random_timeout = random.randint(1000, 3500) / 1000
+        random_timeout = random.randint(100, 150) / 1000
         self.timeout_counter =TimeoutCounter(random_timeout, self.my_addr_port_tuple, self.peer_id)
         try:
             #use argument (first_arg, second_arg, ) note the extra last comma might be needed?
@@ -94,12 +94,23 @@ class RaftPeer:
         while True:
             logger.debug(" start receive ", extra=self.my_detail)
             one_recv_json_message_dict = self.json_message_recv_queue.get()
-
             with self.raft_peer_state.lock:
                 # update terms from candidate
-
+                logger.debug(" inside receive ", extra=self.my_detail)
                 if one_recv_json_message_dict["msg_type"] not in ["request_command"]:
+
+                    # if my term is same as request vote sender means, I am a candidate or I receive this term msg
+                    # from someone else already, there should one person who is already electing from my knowledge
+                    # no reason to accept a same term requxest vote
+                    if one_recv_json_message_dict["msg_type"]  in ["request_vote"] and (one_recv_json_message_dict["sender_term"] == self.raft_peer_state.current_term):
+                        logger.debug(" same term request vote abort " + str(one_recv_json_message_dict),
+                                     extra=self.my_detail)
+                        return
+
+
                     if  one_recv_json_message_dict["sender_term"] > self.raft_peer_state.current_term :
+                        logger.debug(" see larger term " + str(one_recv_json_message_dict),
+                                     extra=self.my_detail)
                         self.raft_peer_state.current_term = one_recv_json_message_dict["sender_term"]
                         #current term is outdate, so if it starts voting need to stop immediately
                         # term will reject the previous voting request actually
@@ -119,8 +130,6 @@ class RaftPeer:
             logger.debug( " processing one recv message " + str(one_recv_json_message_dict), extra = self.my_detail )
             #in json encode it is two element list
             #sendpeer_addr, peer_port = one_recv_json_message_dict["send_from"]
-
-
 
             one_recv_json_message_type = one_recv_json_message_dict["msg_type"]
             receive_processing_functions = {"append_entries_follower_reply":self.process_append_entries_follower_reply,
@@ -178,6 +187,7 @@ class RaftPeer:
             # when received heart beat from leader, reset self timeout of starting new election
             self.timeout_counter.reset_timeout()
             self.raft_peer_state.peer_state = "follower"
+            self.raft_peer_state.vote_for = None
             append_entries_follower = AppendEntriesFollower(one_recv_json_message_dict, self.raft_peer_state)
             append_entries_follower.process_append_entries()
         logger.debug(" finished process_append_entries_leader " + str(one_recv_json_message_dict), extra=self.my_detail)
@@ -208,6 +218,9 @@ class RaftPeer:
         # reply the candidate who sent the vote request to here
         with self.raft_peer_state.lock:
 
+
+            if self.raft_peer_state.peer_state == "leader":
+                self.raft_peer_state.peer_state = "follower"
             # if receive vote request from others means new election, should set self state to candidate,
             # refuse incoming append entries
             # self.raft_peer_state.peer_state = "candidate"
