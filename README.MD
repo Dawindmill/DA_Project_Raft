@@ -9,4 +9,6 @@
 ## Milestones
 
 - Raft Leader Election
+- Visualization
+- Report
 - Snapshot Algorithm based on Raft Leader Election
