@@ -1,8 +1,7 @@
 import logging
-FORMAT = '[TimeoutCounter][%(asctime)-15s][%(levelname)s][%(peer_id)s][%(host)s][%(port)s][%(funcName)s] %(message)s'
-logging.basicConfig(format=FORMAT, level = logging.NOTSET)
+
 logger = logging.getLogger("RequestVote")
-logger.setLevel(logging.WARN)
+logger.setLevel(logging.DEBUG)
 
 class RequestVoteReceive:
     def __init__(self, request_vote_json_dict, raft_peer_state):
@@ -22,6 +21,10 @@ class RequestVoteReceive:
                                "send_from": list(self.raft_peer_state.my_addr_port_tuple),
                                "sender_term": self.raft_peer_state.current_term,
                                "vote_granted": True}
+        if self.raft_peer_state.peer_state == "leader":
+            request_vote_result["vote_granted"] = False
+            return request_vote_result
+
         # if this peer has no log, there is no any peer could have worst log than it
         if len(self.raft_peer_state.state_log) == 0:
             return request_vote_result
@@ -34,7 +37,6 @@ class RequestVoteReceive:
             request_vote_result["vote_granted"] = False
             return request_vote_result
 
-        #put a lock here?
         if self.raft_peer_state.vote_for != None:
             request_vote_result["vote_granted"] = False
             return request_vote_result

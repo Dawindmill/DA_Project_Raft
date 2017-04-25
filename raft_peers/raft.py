@@ -1,8 +1,15 @@
 import time
 import _thread
-from RaftPeer import RaftPeer
+from RaftPeer import *
 from RaftPeerState import RaftPeerState
 from TimeoutCounter import TimeoutCounter
+
+
+FORMAT = '[TimeoutCounter][%(asctime)-15s][%(levelname)s][%(peer_id)s][%(host)s][%(port)s][%(funcName)s] %(message)s'
+logging.basicConfig(format=FORMAT, level = logging.DEBUG, filename="raft_log_file", filemode="w")
+logger = logging.getLogger("RequestVote")
+logger.setLevel(logging.DEBUG)
+
 '''
 Author: Bingfeng Liu
 Date: 16/04/2017
@@ -12,23 +19,33 @@ def test_start_time_out_election():
 
     peer1 = ("localhost", 1111)
     peer2 = ("localhost", 2222)
-    peer_addr_port_tuple_list = [peer1, peer2]
+    peer3 = ("localhost", 3333)
 
-    peer1_raft = RaftPeer(peer1[0], peer1[1], "peer1")
+    peer1_user = 1119
+    peer2_user = 2229
+    peer3_user = 3339
 
 
-    peer2_raft = RaftPeer(peer2[0], peer2[1], "peer2")
+    peer_addr_port_tuple_list = [peer1, peer2, peer3]
+
+    peer_num = len(peer_addr_port_tuple_list)
+
+    peer1_raft = RaftPeer(peer1[0], peer1[1], peer1_user, "peer1", peer_num)
+
+    peer2_raft = RaftPeer(peer2[0], peer2[1], peer2_user, "peer2", peer_num)
+
+    peer3_raft = RaftPeer(peer3[0], peer3[1], peer3_user, "peer3", peer_num)
 
 
-    peer_raft_list = [peer1_raft, peer2_raft]
+    peer_raft_list = [peer1_raft, peer2_raft, peer3_raft]
 
     for one_peer_raft in peer_raft_list:
         one_peer_raft.connect_to_all_peer(peer_addr_port_tuple_list)
 
-    peer1_raft.start_raft_peer()
-    peer2_raft.start_raft_peer()
+    for one_peer_raft in peer_raft_list:
+        one_peer_raft.start_raft_peer()
 
-    time.sleep(10)
+    time.sleep(100)
 
 def test_print_raft_peer_state():
     peer_state = RaftPeerState(("localhost", 1111))
@@ -151,5 +168,5 @@ def test_time_counter():
 #test_sleep_time()
 
 #test_time_counter()
-
-test_start_time_out_election()
+if __name__ == '__main__':
+    test_start_time_out_election()

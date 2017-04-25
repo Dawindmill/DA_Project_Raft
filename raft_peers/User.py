@@ -69,7 +69,7 @@ class User:
             except Exception as e:
                 logger.debug("Error: unable to connect " + str(self.servers_addr_port_list[self.peer_connection_index]) + ", exception => " + str(e), extra=self.my_detail)
                 time.sleep(0.01)
-        print ("Found leader :]")
+            print ("Found leader :], " + str(leader_socket))
 
     def take_user_input(self):
         self.connect_to_next_peer()
@@ -188,6 +188,13 @@ class User:
                         logger.debug( " deserialization recv json data failed " + str(e), extra = self.my_detail)
 
 
-if __name__:
-    user = User([("localhost", 1234), ("localhost", 1235)])
+if __name__ == '__main__':
+    peer1 = ("localhost", 1111)
+    peer2 = ("localhost", 2222)
+    peer3 = ("localhost", 3333)
+    peer4 = ("localhost", 4444)
+    peer5 = ("localhost", 5555)
+
+    peer_addr_port_tuple_list = [peer1, peer2, peer3, peer4, peer5]
+    user = User(peer_addr_port_tuple_list)
     time.sleep(10000000)

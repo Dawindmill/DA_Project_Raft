@@ -1,7 +1,5 @@
 import logging
 logger = logging.getLogger("AppendEntiesLeader")
-FORMAT = '[AppendEntries][%(asctime)-15s][%(levelname)s][%(host)s][%(port)s][%(funcName)s] %(message)s'
-logging.basicConfig(format=FORMAT, level = logging.DEBUG)
 from LogData import LogData
 
 class AppendEntriesLeader:

@@ -3,11 +3,13 @@ Author: Bingfeng Liu
 Created Date: 18/04/2017
 '''
 import _thread
+import threading
 from LogData import LogData
 
 class RaftPeerState:
     def __init__(self, addr_port_tuple, peer_id):
-        self.lock = _thread.allocate_lock()
+        # self.lock = _thread.allocate_lock()
+        self.lock = threading.RLock()
         self.peer_id = peer_id
         self.my_addr_port_tuple = addr_port_tuple
         self.current_term = -1
@@ -28,7 +30,7 @@ class RaftPeerState:
     def initialize_peers_next_and_match_index(self, peers_addr_port_tuple_list):
         next_index = len(self.state_log)
         self.peers_next_index = {peer_addr_port_tuple:next_index for peer_addr_port_tuple in peers_addr_port_tuple_list}
-        self.peers_next_index = {peer_addr_port_tuple:0 for peer_addr_port_tuple in peers_addr_port_tuple_list}
+        self.peers_match_index = {peer_addr_port_tuple:-1 for peer_addr_port_tuple in peers_addr_port_tuple_list}
     def increment_leader_majority_count(self):
         if self.peer_state == "candidate":
             self.leader_majority_count += 1
@@ -37,6 +39,8 @@ class RaftPeerState:
         if self.leader_majority_count >= majority and self.peer_state == "candidate":
             self.peer_state = "leader"
             self.leader_majority_count = 0
+            return True
+        return False
 
 
 

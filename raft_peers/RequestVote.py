@@ -1,6 +1,5 @@
 import logging
-FORMAT = '[TimeoutCounter][%(asctime)-15s][%(levelname)s][%(peer_id)s][%(host)s][%(port)s][%(funcName)s] %(message)s'
-logging.basicConfig(format=FORMAT, level = logging.NOTSET)
+
 logger = logging.getLogger("RequestVote")
 logger.setLevel(logging.WARN)
 class RequestVote:
