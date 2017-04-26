@@ -82,6 +82,8 @@ class AppendEntriesFollower:
                 self.raft_peer_state.state_log = self.raft_peer_state.state_log[0:self.prev_log_index + 2]
 
     def process_commit_index(self, commit_index):
+        if (commit_index == -1):
+            return
         for one_log_data in self.raft_peer_state.state_log[0:commit_index]:
             if one_log_data.log_applied == False:
                 self.raft_peer_state.remote_var.perform_action(one_log_data.request_command_action_list)

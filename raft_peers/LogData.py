@@ -4,7 +4,6 @@ Author: Bingfeng Liu
 Date: 19/04/2017
 '''
 
-
 #use vars() to get instance variables' name and their values in dictioanry
 class LogData:
     def __init__(self, index, term, request_command_action_list, applied = False,request_user_addr_port_tuple = None):
@@ -19,15 +18,23 @@ class LogData:
 
         #[0] => var_name, [1] => action_func, [2] => action_param
         self.request_command_action_list = request_command_action_list
+
+        self.__dict__ = self.return_instance_vars_in_dict()
     def __str__(self):
         return_dict_str = vars(self)
-        return_dict_str.pop("majority_count")
-        return_dict_str.pop("request_user_addr_port_tuple")
-        return_dict_str.pop("log_applied")
+        # return_dict_str.pop("majority_count")
+        # return_dict_str.pop("request_user_addr_port_tuple")
+        # return_dict_str.pop("log_applied")
         return str(return_dict_str)
+
+    def return_instance_vars_in_dict(self):
+        return_dict = vars(self)
+        return_dict.pop("majority_count")
+        return_dict.pop("request_user_addr_port_tuple")
+        return_dict.pop("log_applied")
+        return return_dict
 
     def check_over_majority(self, majority):
         if self.majority_count >= majority:
             return True
         return False
-

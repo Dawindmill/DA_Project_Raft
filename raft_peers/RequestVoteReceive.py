@@ -41,6 +41,9 @@ class RequestVoteReceive:
             request_vote_result["vote_granted"] = False
             return request_vote_result
 
+        # commit index not used in raft paper
+        #if self.raft_peer_state.commit_index >
+
         #at least up to date is fine?
         #ini last_log_index is -1 and state_log len is 0
         if (len(self.raft_peer_state.state_log) -1) >= self.last_log_index:
