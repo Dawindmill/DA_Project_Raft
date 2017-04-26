@@ -138,7 +138,8 @@ class User:
             self.connect_to_next_peer()
         elif one_recv_json_message_dict["command_result"] == "is_leader":
             print("leader found " + str(self.leader_socket))
-            self.input_thread = _thread.start_new_thread(self.take_user_input(), ())
+            self.input_thread = _thread.start_new_thread(self.take_user_input, ())
+            print("leader found end" + str(self.leader_socket))
         else:
             print(" command result => " + str(one_recv_json_message_dict["command_result"]))
 

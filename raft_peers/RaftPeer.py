@@ -170,13 +170,16 @@ class RaftPeer:
                 if one_recv_json_message_type["request_command_list"] == []:
                     self.json_message_send_queue.put({"msg_type":"request_command_reply",
                                                       "command_result": "is_leader",
-                                                      "send_from": self.user_socket.getsockname(),
+                                                      "send_from": list(self.user_socket.getsockname()),
                                                       "send_to": list(one_recv_json_message_type["send_from"])})
                     return
                 temp_log = LogData(len(self.raft_peer_state.state_log),
                                    self.raft_peer_state.current_term,
                                    one_recv_json_message_type["request_command_list"],
                                    (one_recv_json_message_type["send_from"]))
+                temp_log.increment_majority_count()
+                #temp_log.one_log.check_over_majority((self.max_peer_number/2)+1)
+
                 self.raft_peer_state.state_log.append(temp_log)
             else:
                 self.json_message_send_queue.put({"msg_type":"request_command_reply",
@@ -185,9 +188,10 @@ class RaftPeer:
                                                   "send_to":list(one_recv_json_message_type["send_from"]) })
 
     def process_append_entries_follower_reply(self, one_recv_json_message_dict):
+        # print (str(one_recv_json_message_dict))
         logger.debug(" starting process_append_entries_follower_reply " + str(one_recv_json_message_dict), extra=self.my_detail)
-        log_index_start = one_recv_json_message_dict["log_index_start"]
-        log_index_end = one_recv_json_message_dict["log_index_end"]
+        log_index_start = int(one_recv_json_message_dict["log_index_start"])
+        log_index_end = int(one_recv_json_message_dict["log_index_end"])
         if one_recv_json_message_dict["append_entries_result"] == True:
             logger.debug(" starting process_append_entries_follower_reply True" + str(one_recv_json_message_dict),
                          extra=self.my_detail)
@@ -205,8 +209,11 @@ class RaftPeer:
             self.raft_peer_state.peers_next_index[tuple(one_recv_json_message_dict["send_from"])] += 1
 
             # heart beat if reply is true, and log start = -1, log end = -1
+
             if log_index_start != -1 and log_index_end != -1:
-                for one_log in self.raft_peer_state.state_log[log_index_start,log_index_end + 1]:
+                #print(" log_index_start " + str(log_index_start) + " log_index_end " + str(log_index_end))
+
+                for one_log in self.raft_peer_state.state_log[log_index_start:(log_index_end + 1)]:
                     one_log.majority_count += 1
                     if one_log.check_over_majority((self.max_peer_number/2)+1):
                         with self.raft_peer_state.remote_var.lock:
@@ -216,9 +223,10 @@ class RaftPeer:
                             # means user was originally connected to this user
                             # but if received this json means user is in here
                             if one_log.request_user_addr_port_tuple != None:
-                                self.json_message_send_queue.put({"send_from":self.my_addr_port_tuple,
-                                                                      "send_to":list(one_log.request_user_addr_port_tuple),
-                                                                      "command_result": self.raft_peer_state.remote_var.vars[one_log.request_command_action_list[0]]})
+                                self.json_message_send_queue.put({"msg_type": "request_command_reply",
+                                                                  "send_from":list(self.my_addr_port_tuple),
+                                                                  "send_to":list(one_log.request_user_addr_port_tuple),
+                                                                  "command_result": self.raft_peer_state.remote_var.vars[one_log.request_command_action_list[0]]})
 
             else:
                 logger.debug(" starting process_append_entries_follower_reply False" + str(one_recv_json_message_dict),

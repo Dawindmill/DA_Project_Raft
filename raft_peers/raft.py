@@ -49,7 +49,7 @@ def test_start_time_out_election_three():
     for one_peer_raft in peer_raft_list:
         one_peer_raft.start_raft_peer()
 
-    time.sleep(1000)
+    time.sleep(100)
 
 
 

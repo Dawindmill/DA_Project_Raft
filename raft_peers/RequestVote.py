@@ -11,8 +11,8 @@ class RequestVote:
         self.sender_term = raft_peer_state.current_term
         self.peer_id = raft_peer_state.peer_id
         if len(raft_peer_state.state_log) > 0:
-            self.last_log_index = raft_peer_state.state_log[-1].index
-            self.last_log_term = raft_peer_state.state_log[-1].term
+            self.last_log_index = raft_peer_state.state_log[-1].log_index
+            self.last_log_term = raft_peer_state.state_log[-1].log_term
         else:
             self.last_log_index = -1
             self.last_log_term = -1

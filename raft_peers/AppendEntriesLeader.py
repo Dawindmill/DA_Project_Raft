@@ -22,7 +22,7 @@ class AppendEntriesLeader:
         # could be one or more for efficiency
         if type == "append":
             # now only add one
-            self.new_entries = raft_peer_state.state_log[raft_peer_state.peers_next_index[send_to_addr_port_tuple]]
+            self.new_entries = raft_peer_state.state_log[raft_peer_state.peers_next_index[send_to_addr_port_tuple]:len(raft_peer_state.state_log)]
         elif type == "heartbeat":
             self.new_entries = []
         self.leader_commit_index = raft_peer_state.commit_index

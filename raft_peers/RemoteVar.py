@@ -16,7 +16,7 @@ class RemoteVar:
 
     # param list [0] => var name, [1] => action func， [2] => action func single param
     def perform_action(self, action_param_list):
-        if str(action_param_list[0]) in self.vars:
+        if str(action_param_list[0]) not in self.vars:
             self.vars[str(action_param_list[0])] = 0.0
 
         action_funcs = {"add":self.add,
@@ -25,7 +25,7 @@ class RemoteVar:
                         "time":self.time}
 
         action_func = action_funcs[str(action_param_list[1])]
-        action_func(str(str(action_param_list[0])),float(action_param_list[3]))
+        action_func(str(action_param_list[0]),float(action_param_list[2]))
 
     def add(self, var_name, action_param):
         self.vars[var_name] += action_param
