@@ -3,6 +3,7 @@ import threading
 import socket
 import json
 import random
+import monster
 
 GAME_NAME = "Heritage"
 
@@ -135,8 +136,9 @@ class VillagerListener(threading.Thread):
         while True:
             self.in_msg += self.villager.socket.recv(1024).decode("utf-8")
             if self.in_msg:
-                debug_print("in message: ")
+                debug_print("in message: .")
                 debug_print(self.in_msg)
+                debug_print(".")
             if "\n" in self.in_msg:
                 msg_split_list = self.in_msg.split("\n")
                 self.in_msg = msg_split_list[-1]
