@@ -32,6 +32,8 @@ SERVER_INFO = "information"
 SEND_FROM = "send_from"
 SEND_TO = "send_to"
 
+PEER_ID = "peer_id"
+
 HOST_INDEX = 0
 PORT_INDEX = 1
 
@@ -60,45 +62,43 @@ class Image:
 
 class Villager(Image, threading.Thread):
 
-    socket = None
-    host = ""
-    listening_port = 0
-    peer_id = ""
-    villager_id = 0
-    health = 1
-
-    messages = []
-    in_msg = ""
-
     def __init__(self, socket_set, image, position, id):
+        self.health = 1
+        self.messages = []
+        self.learned_skills = []
+        self.learning_skill = None
+        self.host = ""
+        self.listening_port = 0
+        self.peer_id = ""
+        self.dead = False
         self.socket = socket_set
         width, height = image.get_rect().size
         center_x, center_y = position
         super().__init__(image, center_x, center_y, height, width)
         self.villager_id = id
+        self.request_parser = VillagerListener(self)
         threading.Thread.__init__(self)
 
     def run(self):
-        while True:
-            self.in_msg += self.socket.recv(1024).decode("utf-8")
-            #debug_print("in messages")
-            debug_print(self.in_msg)
-            if "\n" in self.in_msg:
-                msg_split_list = self.in_msg.split("\n")
-                self.in_msg = msg_split_list[-1]
-                for one_msg in msg_split_list[0:-1]:
-                    try:
-                        json_data = json.loads(one_msg)
-                        if json_data[MESSAGE_TYPE] == SERVER_INFO:
-                            self.host = json_data["host"]
-                            self.listening_port = json_data["port"]
-                            self.peer_id = json_data["peer_id"]
-                        else:
-                            self.messages.append(json_data)
-                    except Exception as e:
-                        debug_print(" deserialization recv json data failed " + str(e))
-            #debug_print("message list: ")
-            #debug_print(self.messages)
+        self.request_parser.start()
+        while not self.dead:
+            while self.messages:
+                request = self.messages.pop(0)
+                request_type = request[MESSAGE_TYPE]
+                if request_type == SERVER_INFO:
+                    self.set_info(request)
+                #elif request_type ==
+            self.dead = True
+        if self.dead:
+            data = {MESSAGE_TYPE: "villager_killed", PEER_ID: self.peer_id}
+            self.socket.sendall(str.encode(json.dumps(data)))
+
+    def set_info(self, info):
+        self.host = info["host"]
+        self.listening_port = info["port"]
+        self.peer_id = info["peer_id"]
+
+
 
     def set_server_info(self, host, port, peer_id):
         self.host = host
@@ -110,6 +110,47 @@ class Villager(Image, threading.Thread):
 
     def health_down(self):
         self.health -= 1
+
+
+class VillagerListener(threading.Thread):
+
+    def __init__(self, villager):
+        self.villager = villager
+        self.in_msg = ""
+        threading.Thread.__init__(self)
+
+    def parse_message(self, msg):
+        try:
+            json_data = json.loads(msg)
+            message_type = json_data[MESSAGE_TYPE]
+        except Exception as e:
+                debug_print(" deserialization recv json data failed " + str(e))
+
+        if message_type in MESSAGE_TYPES:
+            return json_data
+        else:
+            debug_print("message type not found: "+message_type)
+
+    def run(self):
+        while True:
+            self.in_msg += self.villager.socket.recv(1024).decode("utf-8")
+            if self.in_msg:
+                debug_print("in message: ")
+                debug_print(self.in_msg)
+            if "\n" in self.in_msg:
+                msg_split_list = self.in_msg.split("\n")
+                self.in_msg = msg_split_list[-1]
+                msg_split_list = msg_split_list[0:-1]
+                while msg_split_list:
+                    one_msg = msg_split_list.pop(0)
+                    parsed = self.parse_message(one_msg)
+                    if parsed:
+                        self.villager.messages.append(parsed)
+
+            #debug_print("message list: ")
+            #debug_print(self.messages)
+
+
 
 
 '''class Message(Image):
@@ -137,29 +178,10 @@ class Villager(Image, threading.Thread):
 
 
 
-class MessageParser(threading.Thread):
+class ConnectionListener(threading.Thread):
 
-    unparsed_messages = []
-    #messages = []
-
-    def __init__(self, unparsed_messages, messages):
-        self.unparsed_messages = unparsed_messages
-        self.messages = messages
-        threading.Thread.__init__(self)
-
-    def parse_next(self):
-        data = self.unparsed_messages.pop(0)
-        json_data = json.loads(data)
-        #self.messages.append()
-        message_type = json_data[MESSAGE_TYPE]
-
-        if message_type in MESSAGE_TYPES:
-            return (message_type, json_data)
-
-
-class Listener(threading.Thread):
-
-    host = "192.168.1.105"
+    #host = "192.168.1.105"
+    host = "10.13.225.187"
     port = 8888
     nodes = []
     listening = True
@@ -229,7 +251,8 @@ def start_game(screen, villager_images, monster_image, clock, villagers_connecti
             arrived = message.move()
             message.render(screen)
             if arrived:
-                message_list.remove(message)
+                message_list.
+                remove(message)
         if (a == 15):
             message_list.append(message2)'''
         #a+=1
@@ -258,7 +281,7 @@ def main():
     monster_image = None
     clock = pygame.time.Clock()
     villager_connections = []
-    listener = Listener(villager_connections)
+    listener = ConnectionListener(villager_connections)
     listener.start()
     start_game(screen, villager_images, monster_image, clock, villager_connections)
     listener.close_socket()
