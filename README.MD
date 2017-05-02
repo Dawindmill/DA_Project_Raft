@@ -9,6 +9,7 @@
 ## Milestones
 
 - Raft Leader Election
-- Visualization
+- Raft Game
+- Bridging Raft and Game
 - Report
 - Snapshot Algorithm based on Raft Leader Election
