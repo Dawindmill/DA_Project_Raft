@@ -14,7 +14,7 @@ class AppendEntriesLeader:
         # leader's log index before the new appended entry
         if len(raft_peer_state.state_log) >= 2:
             self.prev_log_index = raft_peer_state.peers_next_index[send_to_addr_port_tuple]
-            self.prev_log_term = raft_peer_state.state_log[self.prev_log_index].term
+            self.prev_log_term = raft_peer_state.state_log[self.prev_log_index].log_term
         else:
             #init state
             self.prev_log_index = -1

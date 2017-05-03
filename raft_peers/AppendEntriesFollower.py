@@ -40,31 +40,32 @@ class AppendEntriesFollower:
                   "msg_type": "append_entries_follower_reply"}
 
         # #reply false if this.follower's term > leader's term
-        # if self.raft_peer_state.current_term > self.leader_term:
-        #     result["append_entries_result"] = False
-        #     return result
+        if self.raft_peer_state.current_term > self.leader_term:
+            result["append_entries_result"] = False
+            return result
 
         #reply false if this.follower's does not have this prev_index, and term does not match
         #so even the follower has more log we only check the prev_index one?
 
-        # if (len(self.raft_peer_state.state_log) - 1) < self.prev_log_index:
-        #     result["append_entries_result"] = False
-        #     return result
+        if (len(self.raft_peer_state.state_log) - 1) < self.prev_log_index:
+            result["append_entries_result"] = False
+            return result
 
         #leader's prev log term does not match with follower's last entry's term
         if self.prev_log_index != -1:
-            if (self.raft_peer_state.state_log[self.prev_log_index].term != self.prev_log_term):
+            if (self.raft_peer_state.state_log[self.prev_log_index].log_term != self.prev_log_term):
                 result["append_entries_result"] = False
                 return result
         result["append_entries_result"] = True
 
-        self.raft_peer_state.current_term = self.leader_term
+        # self.raft_peer_state.current_term = self.leader_term
 
         self.add_in_new_entries()
 
         self.raft_peer_state.commit_index = self.leader_commit_index
 
         self.process_commit_index(self.raft_peer_state.commit_index)
+
 
         return result
 
@@ -87,7 +88,8 @@ class AppendEntriesFollower:
     def process_commit_index(self, commit_index):
         if (commit_index == -1):
             return
-        for one_log_data in self.raft_peer_state.state_log[0:commit_index]:
+        # [include: exclude]
+        for one_log_data in self.raft_peer_state.state_log[0:commit_index+1]:
             if one_log_data.log_applied == False:
                 self.raft_peer_state.remote_var.perform_action(one_log_data.request_command_action_list)
                 one_log_data.log_applied = True
