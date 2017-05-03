@@ -19,7 +19,7 @@ import os
 
 day_countdown = Constant.ONE_DAY
 
-
+# skills => {skill_name: Skill()}
 def start_game(screen, font, villager_images, monster_image, skills, clock, villagers_connections, player):
     global day_countdown
 
@@ -49,7 +49,8 @@ def start_game(screen, font, villager_images, monster_image, skills, clock, vill
             else:
                 villager.set_leader_role(Role.CANDIDATE)
             villagers.append(villager)
-            villager.start()
+            # diable villager thread for game devs
+            # villager.start()
             villager_count += 1
             next_villager_id += 1
         screen.fill(Constant.WHITE)
@@ -85,6 +86,13 @@ def start_game(screen, font, villager_images, monster_image, skills, clock, vill
                 # does not close on mac so need to add os._exit(0)
                 os._exit(0)
                 sys.exit()
+            if event.type == pygame.MOUSEBUTTONUP:
+                pos = pygame.mouse.get_pos()
+                # debug_print(str(skills))
+                clicked_sprites = [(skill_name, one_skill) for skill_name, one_skill in skills.items() if one_skill.image_rect.collidepoint(pos)]
+
+                debug_print("clicked image => " + str(clicked_sprites))
+                clicked_sprites[0][1].image.set_alpha(100)
 
         pygame.display.flip()
         clock.tick(Constant.FRAME_PER_SECOND)
@@ -113,7 +121,8 @@ def main():
     # listener.start()
     index = 0
     for skill_name, skill_image in skill_images.items():
-        skills[skill_name] = Skill(skill_name, skill_image,50 + index * ((skill_image.get_rect().size)[0] * Constant.SKILL_IMAGE_SCALE), Constant.SCREEN_HEIGHT - 50)
+        # discard the suffix
+        skills[skill_name.split(".")[0]] = Skill(skill_name, skill_image,50 + index * ((skill_image.get_rect().size)[0] * Constant.SKILL_IMAGE_SCALE), Constant.SCREEN_HEIGHT - 50)
         index += 1
     player = Player(player_image, Constant.SAGE_POSITION[0], Constant.SAGE_POSITION[1])
     start_game(screen, font, villager_images, monster_image, skills, clock, villager_connections, player)

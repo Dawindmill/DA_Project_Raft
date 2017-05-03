@@ -13,6 +13,8 @@ class Image:
         self.height = height
         self.width = width
         self.image = pygame.transform.scale(image, (width, height))
+        # the actual position on the screen
+        self.image_rect = None
 
     def render(self, screen):
-        screen.blit(self.image, (self.x - self.width//2, self.y - self.height//2))
+        self.image_rect = screen.blit(self.image, (self.x - self.width//2, self.y - self.height//2))
