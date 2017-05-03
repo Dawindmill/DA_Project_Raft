@@ -142,6 +142,7 @@ class User:
             self.input_thread = _thread.start_new_thread(self.take_user_input, ())
             print("leader found end" + str(self.leader_socket))
         else:
+            print(" msg => " + str(one_recv_json_message_dict))
             print(" command result => " + str(one_recv_json_message_dict["command_result"]))
 
 

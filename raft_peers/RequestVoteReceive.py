@@ -46,11 +46,14 @@ class RequestVoteReceive:
 
         #at least up to date is fine?
         #ini last_log_index is -1 and state_log len is 0
-        if (len(self.raft_peer_state.state_log) -1) >= self.last_log_index:
-            if self.raft_peer_state.state_log[self.last_log_index].term > self.last_log_term:
+        if (len(self.raft_peer_state.state_log) -1) > self.last_log_index:
+            request_vote_result["vote_grantned"] = False
+            return request_vote_result
+        # if same log length, but current peer has newer term, then reject the candidate request
+        if (len(self.raft_peer_state.state_log) - 1) == self.last_log_index:
+            if self.raft_peer_state.state_log[self.last_log_index].log_term > self.last_log_term:
                 request_vote_result["vote_grantned"] = False
                 return request_vote_result
 
-        
         self.raft_peer_state.vote_for = self.send_from
         return request_vote_result

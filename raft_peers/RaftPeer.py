@@ -210,23 +210,23 @@ class RaftPeer:
                                 self.raft_peer_state.remote_var.perform_action(one_log.request_command_action_list)
                                 one_log.log_applied = True
                                 self.raft_peer_state.commit_index += 1
-                            # means user was originally connected to this user
-                            # but if received this json means user is in here
-                            if one_log.request_user_addr_port_tuple != None:
-                                self.json_message_send_queue.put({"msg_type": "request_command_reply",
-                                                                  "send_from":list(self.my_addr_port_tuple),
-                                                                  "send_to":list(one_log.request_user_addr_port_tuple),
-                                                                  "command_result": self.raft_peer_state.remote_var.vars[one_log.request_command_action_list[0]]})
-                            logger.debug(
-                                " leader update log " + str(self.raft_peer_state),
-                                extra=self.my_detail)
+                                # means user was originally connected to this user
+                                # but if received this json means user is in here
+                                if one_log.request_user_addr_port_tuple != None:
+                                    self.json_message_send_queue.put({"msg_type": "request_command_reply",
+                                                                      "send_from":list(self.my_addr_port_tuple),
+                                                                      "send_to":list(one_log.request_user_addr_port_tuple),
+                                                                      "command_result": self.raft_peer_state.remote_var.vars[one_log.request_command_action_list[0]]})
+                                logger.debug(
+                                    " leader update log " + str(self.raft_peer_state),
+                                    extra=self.my_detail)
 
 
             else:
                 logger.debug(" starting process_append_entries_follower_reply False" + str(one_recv_json_message_dict),
                              extra=self.my_detail)
                 with self.raft_peer_state.lock:
-                    if self.raft_peer_state.peers_next_index[tuple(one_recv_json_message_dict["send_from"])] > 0:
+                    if self.raft_peer_state.peers_next_index[tuple(one_recv_json_message_dict["send_from"])] >= 0:
                         self.raft_peer_state.peers_next_index[tuple(one_recv_json_message_dict["send_from"])] -= 1
                     #append_entries_leader = AppendEntriesLeader(self.raft_peer_state, one_recv_json_message_dict["send_from"], "append")
                     #self.json_message_send_queue.put(append_entries_leader.return_instance_vars_in_dict())
@@ -366,7 +366,7 @@ class RaftPeer:
             log_len = len(self.raft_peer_state.state_log)
             for one_add_port_tuple in self.peers_addr_client_socket.keys():
                 # this peer is uptodate and we have no new entries just send empty heartbeat
-                if self.raft_peer_state.peers_next_index[one_add_port_tuple] == log_len or \
+                if self.raft_peer_state.peers_next_index[one_add_port_tuple] == log_len - 1 or \
                                 self.raft_peer_state.peers_match_index == (log_len - 1):
                     append_entries_heart_beat_leader = AppendEntriesLeader(self.raft_peer_state, one_add_port_tuple, "heartbeat").return_instance_vars_in_dict()
                 else:

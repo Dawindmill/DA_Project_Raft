@@ -40,20 +40,20 @@ class AppendEntriesFollower:
                   "msg_type": "append_entries_follower_reply"}
 
         # #reply false if this.follower's term > leader's term
-        # if self.raft_peer_state.current_term > self.leader_term:
-        #     result["append_entries_result"] = False
-        #     return result
+        if self.raft_peer_state.current_term > self.leader_term:
+            result["append_entries_result"] = False
+            return result
 
         #reply false if this.follower's does not have this prev_index, and term does not match
         #so even the follower has more log we only check the prev_index one?
 
-        # if (len(self.raft_peer_state.state_log) - 1) < self.prev_log_index:
-        #     result["append_entries_result"] = False
-        #     return result
+        if (len(self.raft_peer_state.state_log) - 1) < self.prev_log_index:
+            result["append_entries_result"] = False
+            return result
 
         #leader's prev log term does not match with follower's last entry's term
         if self.prev_log_index != -1:
-            if (self.raft_peer_state.state_log[self.prev_log_index].term != self.prev_log_term):
+            if (self.raft_peer_state.state_log[self.prev_log_index].log_term != self.prev_log_term):
                 result["append_entries_result"] = False
                 return result
         result["append_entries_result"] = True
