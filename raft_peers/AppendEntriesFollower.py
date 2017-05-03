@@ -58,13 +58,14 @@ class AppendEntriesFollower:
                 return result
         result["append_entries_result"] = True
 
-        self.raft_peer_state.current_term = self.leader_term
+        # self.raft_peer_state.current_term = self.leader_term
 
         self.add_in_new_entries()
 
         self.raft_peer_state.commit_index = self.leader_commit_index
 
         self.process_commit_index(self.raft_peer_state.commit_index)
+
 
         return result
 
@@ -87,7 +88,8 @@ class AppendEntriesFollower:
     def process_commit_index(self, commit_index):
         if (commit_index == -1):
             return
-        for one_log_data in self.raft_peer_state.state_log[0:commit_index]:
+        # [include: exclude]
+        for one_log_data in self.raft_peer_state.state_log[0:commit_index+1]:
             if one_log_data.log_applied == False:
                 self.raft_peer_state.remote_var.perform_action(one_log_data.request_command_action_list)
                 one_log_data.log_applied = True

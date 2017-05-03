@@ -102,7 +102,7 @@ class User:
                 leader_socket = self.leader_socket
             while True:
                 if leader_socket == None:
-                    time.sleep(0.02)
+                    time.sleep(1)
                     continue
                 else:
                     command_send_json_dict = {"msg_type": "request_command",
@@ -133,6 +133,7 @@ class User:
             receive_processing_function(one_recv_json_message_dict)
 
     def request_command_request_reply(self, one_recv_json_message_dict):
+        time.sleep(1)
         if one_recv_json_message_dict["command_result"] == "not_leader":
             print(one_recv_json_message_dict["command_result"] + " finding leaders now")
             self.connect_to_next_peer()

@@ -18,13 +18,14 @@ class TimeoutCounter:
         self.last = 0
         self.sleep_time = 0.001
         # send heat beat in 10 ms
-        self.append_entries_heart_beat_time_out = 0.01
+        # self.append_entries_heart_beat_time_out = 0.01
+        self.append_entries_heart_beat_time_out = 2
         self.raft_peer_state = raft_peer_state
 
     def start_time_out(self, time_out, action_func, timeout_type):
 
         # logger.debug(" gap => " + str(gap), extra = self.my_detial)
-    #with self.lock:
+    #with self.lock:s
         # 1ms
         last = time.time()
         time.sleep(self.sleep_time)
