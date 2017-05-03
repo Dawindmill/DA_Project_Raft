@@ -2,7 +2,7 @@ import os
 class Constant:
     GAME_NAME = "Heritage"
 
-    SCREEN_WIDTH = 1000
+    SCREEN_WIDTH = 1100
     SCREEN_HEIGHT = 800
     FRAME_PER_SECOND = 60
 
@@ -23,8 +23,8 @@ class Constant:
     # MESSAGE_IMAGE = "assets/message.png"
 
     # y increase move down, x increase move right
-    VILLAGER_POSITIONS = [(200, 200), (300, 200), (400, 200), (500, 200), (600, 200), (700, 200),
-                          (700, 400), (600, 400), (500, 400), (400, 400), (300, 400), (200, 400)]
+    VILLAGER_POSITIONS = [(200, 200), (350, 200), (500, 200), (650, 200), (800, 200), (950, 200),
+                          (950, 400), (800, 400), (650, 400), (500, 400), (350, 400), (200, 400)]
     MONSTER_POSITIONS = [(20, 50), (20, 100), (20, 150)]
     SAGE_POSITION = (300, 500)
 

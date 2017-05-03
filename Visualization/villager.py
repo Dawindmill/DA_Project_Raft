@@ -14,7 +14,8 @@ class Villager(Image, threading.Thread):
     leader_taken = False
 
     def __init__(self, socket_set, image, position, villager_id, font):
-
+        # render shouting
+        self.message_count = 1
         # for testing to only create one leader
         self.skills = []
         self.max_health = 2
@@ -45,11 +46,11 @@ class Villager(Image, threading.Thread):
         self.skills.append(one_skill)
 
     def set_leader_role(self, role):
-        if not Villager.leader_taken:
+        if not Villager.leader_taken and role == Role.LEADER:
             Villager.leader_taken = True
             self.role = role
         else:
-            self.role = role
+            self.role = Role.CANDIDATE
 
     def run(self):
         # self.request_parser.start()
@@ -118,5 +119,21 @@ class Villager(Image, threading.Thread):
                                                    self.y - self.height // 2),
                                                   (self.width * (self.current_health / self.max_health),
                                                    Villager.HEAL_BAR_HEIGHT)))
+
+        if self.role == Role.LEADER:
+
+            pygame.draw.rect(screen, Constant.RED, pygame.Rect((self.x - self.width * 1.5,
+                                                                self.y - self.height // 4),
+                                                               (self.width,
+                                                                self.height)))
+
+            for i in range(self.message_count):
+                message = self.font.render("I am Leader", 1, Constant.BLACK)
+                screen.blit(message, (self.x - self.width * 1.5 + 1, self.y - self.height // 4 + message.get_height() * i))
+            self.message_count += 1
+            if self.message_count > 5:
+                self.message_count = 1
+
+
         for one_skill in self.skills:
             one_skill.render(screen)
