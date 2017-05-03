@@ -13,13 +13,14 @@ from debug_print import *
 from connection_listener import ConnectionListener
 from monster import Monster
 from player import Player
+from skill import  Skill
 import sys
 import os
 
 day_countdown = Constant.ONE_DAY
 
 
-def start_game(screen, font, villager_images, monster_image, clock, villagers_connections, player):
+def start_game(screen, font, villager_images, monster_image, skills, clock, villagers_connections, player):
     global day_countdown
 
     villager_count = 0
@@ -61,6 +62,9 @@ def start_game(screen, font, villager_images, monster_image, clock, villagers_co
         monster.render(screen)
         monster2.render(screen)
 
+        for one_skill in skills.values():
+            one_skill.render(screen)
+
         if day_countdown <= 0:
             day_countdown = Constant.ONE_DAY
         elif day_countdown <= Constant.NIGHT_TIME:
@@ -96,6 +100,9 @@ def main():
     screen = pygame.display.set_mode((Constant.SCREEN_WIDTH, Constant.SCREEN_HEIGHT))
     screen.fill(Constant.WHITE)
     villager_images = []
+    skill_images = {image_file_name.split("/")[-1]:pygame.image.load(image_file_name) for image_file_name in Constant.SKILL_IMAGES}
+    skills = {}
+    debug_print(str(skill_images))
     for image in Constant.VILLAGER_IMAGES:
         villager_images.append(pygame.image.load(image))
     player_image = pygame.image.load(Constant.PLAYER_IMAGE)
@@ -104,8 +111,12 @@ def main():
     villager_connections = []
     # listener = ConnectionListener(villager_connections)
     # listener.start()
+    index = 0
+    for skill_name, skill_image in skill_images.items():
+        skills[skill_name] = Skill(skill_name, skill_image,50 + index * ((skill_image.get_rect().size)[0] * Constant.SKILL_IMAGE_SCALE), Constant.SCREEN_HEIGHT - 50)
+        index += 1
     player = Player(player_image, Constant.SAGE_POSITION[0], Constant.SAGE_POSITION[1])
-    start_game(screen, font, villager_images, monster_image, clock, villager_connections, player)
+    start_game(screen, font, villager_images, monster_image, skills, clock, villager_connections, player)
     # listener.close_socket()
 
 

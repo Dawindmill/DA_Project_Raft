@@ -1,8 +1,9 @@
+import os
 class Constant:
     GAME_NAME = "Heritage"
 
     SCREEN_WIDTH = 1000
-    SCREEN_HEIGHT = 600
+    SCREEN_HEIGHT = 800
     FRAME_PER_SECOND = 60
 
     WHITE = (225, 225, 225)
@@ -12,9 +13,12 @@ class Constant:
     GREEN = (0, 225, 0)
     BLUE = (0, 0, 225)
 
+    SKILL_IMAGES = ['./assets/skill_icons/'+str(f) for f in os.listdir('./assets/skill_icons') if f.endswith('.png')]
     VILLAGER_IMAGES = ["assets/villager_m.png", "assets/villager_f.png"]
     MONSTER_IMAGE = "assets/monster.png"
     PLAYER_IMAGE = "assets/sage.png"
+
+    SKILL_IMAGE_SCALE = 0.2
     # MESSAGE_IMAGE = "assets/message.png"
 
     # y increase move down, x increase move right

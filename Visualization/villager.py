@@ -15,6 +15,7 @@ class Villager(Image, threading.Thread):
     def __init__(self, socket_set, image, position, villager_id, font):
 
         # for testing to only create one leader
+        self.skills = []
         self.max_health = 2
         self.current_health = 1
         self.requests = []
