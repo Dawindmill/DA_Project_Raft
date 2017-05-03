@@ -17,8 +17,9 @@ class Constant:
     PLAYER_IMAGE = "assets/sage.png"
     # MESSAGE_IMAGE = "assets/message.png"
 
-    VILLAGER_POSITIONS = [(100, 100), (200, 100), (300, 100), (400, 100), (500, 100), (600, 100),
-                          (600, 300), (500, 300), (400, 300), (300, 300), (200, 300), (100, 300)]
+    # y increase move down, x increase move right
+    VILLAGER_POSITIONS = [(200, 200), (300, 200), (400, 200), (500, 200), (600, 200), (700, 200),
+                          (700, 400), (600, 400), (500, 400), (400, 400), (300, 400), (200, 400)]
     MONSTER_POSITIONS = [(20, 50), (20, 100), (20, 150)]
     SAGE_POSITION = (300, 500)
 
