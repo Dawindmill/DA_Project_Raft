@@ -43,6 +43,13 @@ def start_game(screen, font, villager_images, monster_image, skills, clock, vill
             villager = Villager(None, villager_images[gender],
                                 Constant.VILLAGER_POSITIONS[villager_count], next_villager_id, font)
 
+            # test setting skill
+            villager.add_skill("animal", skills["animal"].image_sprite)
+            villager.add_skill("bow", skills["bow"].image_sprite)
+            villager.add_skill("fix", skills["fix"].image_sprite)
+            villager.add_skill("armour", skills["armour"].image_sprite)
+            villager.add_skill("gym", skills["gym"].image_sprite)
+
             # SET LEADER TO FIRST FEMALE FOR TESTING
             if gender == 1:
                 villager.set_leader_role(Role.LEADER)
@@ -91,7 +98,7 @@ def start_game(screen, font, villager_images, monster_image, skills, clock, vill
                 # debug_print(str(skills))
                 clicked_sprites = [(skill_name, one_skill) for skill_name, one_skill in skills.items() if one_skill.image_rect.collidepoint(pos)]
 
-                debug_print("clicked image => " + str(clicked_sprites))
+                # debug_print("clicked image => " + str(clicked_sprites))
                 clicked_sprites[0][1].image.set_alpha(100)
 
         pygame.display.flip()

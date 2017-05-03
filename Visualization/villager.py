@@ -4,6 +4,7 @@ from role import Role
 from villager_listener import VillagerListener
 from constant import Constant
 from debug_print import *
+from skill import Skill
 import json
 import pygame
 class Villager(Image, threading.Thread):
@@ -35,6 +36,13 @@ class Villager(Image, threading.Thread):
         self.font = font
         # self.request_parser = VillagerListener(self)
         threading.Thread.__init__(self)
+
+    def add_skill(self, skill_name, skill_image):
+        skill_num = len(self.skills)
+
+        # each row render four skill, then go up
+        one_skill = Skill(skill_name, skill_image, self.x - self.width/2 + (int (skill_num%4) * ((skill_image.get_rect().size)[0] * Constant.SKILL_IMAGE_SCALE_VILLAGER)), (self.y - self.height/2) - 15 - (int(skill_num / 4) * int((skill_image.get_rect().size)[1] * Constant.SKILL_IMAGE_SCALE_VILLAGER)), Constant.SKILL_IMAGE_SCALE_VILLAGER)
+        self.skills.append(one_skill)
 
     def set_leader_role(self, role):
         if not Villager.leader_taken:
@@ -110,3 +118,5 @@ class Villager(Image, threading.Thread):
                                                    self.y - self.height // 2),
                                                   (self.width * (self.current_health / self.max_health),
                                                    Villager.HEAL_BAR_HEIGHT)))
+        for one_skill in self.skills:
+            one_skill.render(screen)

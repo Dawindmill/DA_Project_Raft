@@ -19,6 +19,7 @@ class Constant:
     PLAYER_IMAGE = "assets/sage.png"
 
     SKILL_IMAGE_SCALE = 0.2
+    SKILL_IMAGE_SCALE_VILLAGER = 0.05
     # MESSAGE_IMAGE = "assets/message.png"
 
     # y increase move down, x increase move right

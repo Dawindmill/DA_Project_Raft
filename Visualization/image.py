@@ -15,6 +15,8 @@ class Image:
         self.image = pygame.transform.scale(image, (width, height))
         # the actual position on the screen
         self.image_rect = None
+        # can pass to villager to render their own skill iamge
+        self.image_sprite = image
 
     def render(self, screen):
         self.image_rect = screen.blit(self.image, (self.x - self.width//2, self.y - self.height//2))
