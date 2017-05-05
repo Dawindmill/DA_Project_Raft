@@ -76,7 +76,14 @@ def start_game(screen, font, villager_images, monster_image, skills, clock, vill
         if day_countdown <= 0:
             day_countdown = Constant.ONE_DAY
         elif day_countdown <= Constant.NIGHT_TIME:
-            screen.fill(Constant.BLACK)
+            # inspired from http://stackoverflow.com/questions/6339057/draw-a-transparent-rectangle-in-pygame
+            s = pygame.Surface((1000, 750))  # the size of your rect
+            s.set_alpha(200)  # alpha level
+            s.fill(Constant.BLACK)  # this fills the entire surface
+            screen.blit(s, (0, 0))  # (0,0) are the top-left coordinates
+
+            debug_print("night")
+
 
         day_countdown -= 1
 
@@ -99,7 +106,8 @@ def start_game(screen, font, villager_images, monster_image, skills, clock, vill
                 clicked_sprites = [(skill_name, one_skill) for skill_name, one_skill in skills.items() if one_skill.image_rect.collidepoint(pos)]
 
                 # debug_print("clicked image => " + str(clicked_sprites))
-                clicked_sprites[0][1].image.set_alpha(100)
+                if len(clicked_sprites) > 0:
+                    clicked_sprites[0][1].image.set_alpha(100)
 
         pygame.display.flip()
         clock.tick(Constant.FRAME_PER_SECOND)

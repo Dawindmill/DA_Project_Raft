@@ -13,6 +13,25 @@ class Constant:
     GREEN = (0, 225, 0)
     BLUE = (0, 0, 225)
 
+    TILE_TYPE_PLANT = "plant"
+    TILE_PLANT_IMAGE = "./assets/tiles/grass_tile.png"
+    TILE_TYPE_ANIMAP = "animal"
+    TILE_ANIMAL_IMAGE = "./assets/tiles/animal_tile.png"
+
+    CHICKEN_EGG_IMAGE = "./assets/plant_animal/egg.png"
+    CHICKEN_IMAGE = "./assets/plant_animal/chicken.png"
+    CHICHEN_EGG_IMAGE_SCALE = 1
+    CHICEN_IAMGE_SCALE = 1
+
+    TREE_IMAGE = "./assets/plant_animal/tree.png"
+    TREE_WITH_APPLE_IMAGE = "./assets/plant_animal/tree_with_apple.png"
+    TREE_IMAGE_SCALE = 0.2
+    TREE_WITH_APPLE_IMAGE_SCALE = 0.2
+
+    TILE_IMAGE_SCALE = 0.3
+
+    LAND_SIZE = 4
+
     SKILL_IMAGES = ['./assets/skill_icons/'+str(f) for f in os.listdir('./assets/skill_icons') if f.endswith('.png')]
     VILLAGER_IMAGES = ["assets/villager_m.png", "assets/villager_f.png"]
     MONSTER_IMAGE = "assets/monster.png"
@@ -24,7 +43,7 @@ class Constant:
 
     # y increase move down, x increase move right
     VILLAGER_POSITIONS = [(200, 200), (350, 200), (500, 200), (650, 200), (800, 200), (950, 200),
-                          (950, 400), (800, 400), (650, 400), (500, 400), (350, 400), (200, 400)]
+                          (950, 500), (800, 500), (650, 500), (500, 500), (350, 500), (200, 500)]
     MONSTER_POSITIONS = [(20, 50), (20, 100), (20, 150)]
     SAGE_POSITION = (300, 500)
 

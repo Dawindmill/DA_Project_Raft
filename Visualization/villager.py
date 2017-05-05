@@ -7,6 +7,7 @@ from debug_print import *
 from skill import Skill
 import json
 import pygame
+from land import Land
 class Villager(Image, threading.Thread):
 
     HEAL_BAR_HEIGHT = 5
@@ -35,8 +36,11 @@ class Villager(Image, threading.Thread):
         super().__init__(image, center_x, center_y, height, width)
         self.villager_id = villager_id
         self.font = font
+
+        self.land = Land(self, Constant.LAND_SIZE)
+
         # self.request_parser = VillagerListener(self)
-        threading.Thread.__init__(self)
+        # threading.Thread.__init__(self)
 
     def add_skill(self, skill_name, skill_image):
         skill_num = len(self.skills)
@@ -137,3 +141,5 @@ class Villager(Image, threading.Thread):
 
         for one_skill in self.skills:
             one_skill.render(screen)
+
+        self.land.render(screen)
