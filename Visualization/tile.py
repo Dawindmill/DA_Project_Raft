@@ -9,6 +9,8 @@ class Tile(Image):
 
 
         if (tile_type == Constant.TILE_TYPE_PLANT):
+            self.count_down_const = Constant.TREE_MATURE_COUNT_DOWN
+            self.count_down = self.count_down_const
             image = pygame.image.load(Constant.TILE_PLANT_IMAGE)
             not_mature_image = pygame.image.load(Constant.TREE_IMAGE)
             height, width = not_mature_image.get_rect().size
@@ -18,6 +20,8 @@ class Tile(Image):
             height, width = mature.get_rect().size
             self.animal_or_plant.append(pygame.transform.scale(mature, ( int(width * Constant.TREE_WITH_APPLE_IMAGE_SCALE), int(height * Constant.TREE_WITH_APPLE_IMAGE_SCALE))))
         else:
+            self.count_down_const = Constant.CHICKEN_MATURE_COUNT_DOWN
+            self.count_down = self.count_down_const
             image = pygame.image.load(Constant.TILE_ANIMAL_IMAGE)
             not_mature_image = pygame.image.load(Constant.CHICKEN_EGG_IMAGE)
             height, width = not_mature_image.get_rect().size
@@ -33,12 +37,24 @@ class Tile(Image):
         width, height = image.get_rect().size
         self.applied = False
 
+
         center_x = owner_center_x - image.get_rect().width * scale + num * image.get_rect().width * scale
         center_y = owner_center_y + owner_height + y_gap_factor * image.get_rect().height * scale
 
         super().__init__(image, center_x, center_y, int(height*scale), int(width*scale))
 
+    def un_mature(self):
+        if self.mature == True:
+            self.mature = False
+
     def render(self, screen):
+
+        if not self.mature:
+            self.count_down -= 1
+        if self.count_down == 0:
+            self.mature = True
+            self.count_down = self.count_down_const
+
         self.image_rect = screen.blit(self.image, (self.x - self.width // 2, self.y - self.height // 2))
         if self.display_plant_or_animal == True:
             if self.mature:

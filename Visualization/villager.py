@@ -8,6 +8,7 @@ from skill import Skill
 import json
 import pygame
 from land import Land
+from attack import Attack
 class Villager(Image, threading.Thread):
 
     HEAL_BAR_HEIGHT = 5
@@ -19,8 +20,8 @@ class Villager(Image, threading.Thread):
         self.message_count = 1
         # for testing to only create one leader
         self.skills = []
-        self.max_health = 2
-        self.current_health = 1
+        self.max_health = 2.0
+        self.current_health = 1.0
         self.requests = []
         self.current_message = ""
         self.message_countdown = 0
@@ -36,11 +37,23 @@ class Villager(Image, threading.Thread):
         super().__init__(image, center_x, center_y, height, width)
         self.villager_id = villager_id
         self.font = font
+        self.attacked = False
+        self.attack_display_count_down = Constant.ATTACK_DISPLAY_COUNT_DOWN
+        self.attack_display_count_down_const = Constant.ATTACK_DISPLAY_COUNT_DOWN
+        self.attack = Attack(self.x, self.y)
+        self.dead = False
 
         self.land = Land(self, Constant.LAND_SIZE)
 
         # self.request_parser = VillagerListener(self)
         # threading.Thread.__init__(self)
+
+    def set_attack(self, hp_decrement):
+        self.attacked = True
+        self.attack_display_count_down = self.attack_display_count_down_const
+        self.current_health_down_with_amount(hp_decrement)
+
+
 
     def add_skill(self, skill_name, skill_image):
         skill_num = len(self.skills)
@@ -96,6 +109,13 @@ class Villager(Image, threading.Thread):
     def current_health_down(self):
         self.current_health -= 1
 
+    def current_health_down_with_amount(self, hp_decrement):
+        if hp_decrement >= self.current_health:
+            self.current_health = 0
+            self.dead = True
+            return
+        self.current_health -= hp_decrement
+
     def render(self, screen):
         super().render(screen)
 
@@ -143,3 +163,9 @@ class Villager(Image, threading.Thread):
             one_skill.render(screen)
 
         self.land.render(screen)
+
+        if self.attacked & self.attack_display_count_down != 0:
+            self.attack.render(screen)
+            self.attack_display_count_down -= 0
+            if self.attack_display_count_down == 0:
+                self.attacked = False

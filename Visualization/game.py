@@ -25,8 +25,10 @@ def start_game(screen, font, villager_images, monster_image, skills, clock, vill
 
     villager_count = 0
     villagers = []
-    monster = Monster(monster_image, Constant.MONSTER_POSITIONS[0][0], Constant.MONSTER_POSITIONS[0][1])
-    monster2 = Monster(monster_image, Constant.MONSTER_POSITIONS[1][0], Constant.MONSTER_POSITIONS[1][1])
+    monsters = []
+    monsters.append(Monster(monster_image, Constant.MONSTER_POSITIONS[0][0], Constant.MONSTER_POSITIONS[0][1]))
+    monsters.append(Monster(monster_image, Constant.MONSTER_POSITIONS[1][0], Constant.MONSTER_POSITIONS[1][1]))
+
     next_villager_id = 1
 
     global done
@@ -67,8 +69,11 @@ def start_game(screen, font, villager_images, monster_image, skills, clock, vill
         # find leader
         player.find_leader(villagers)
         player.render(screen)
-        monster.render(screen)
-        monster2.render(screen)
+
+
+        for one_monster in monsters:
+            one_monster.attack_or_not(villagers)
+            one_monster.render(screen)
 
         for one_skill in skills.values():
             one_skill.render(screen)
@@ -103,11 +108,19 @@ def start_game(screen, font, villager_images, monster_image, skills, clock, vill
             if event.type == pygame.MOUSEBUTTONUP:
                 pos = pygame.mouse.get_pos()
                 # debug_print(str(skills))
-                clicked_sprites = [(skill_name, one_skill) for skill_name, one_skill in skills.items() if one_skill.image_rect.collidepoint(pos)]
-
+                clicked_skills = [(skill_name, one_skill) for skill_name, one_skill in skills.items() if one_skill.image_rect.collidepoint(pos)]
+                clicked_tile = []
+                for one_villager in villagers:
+                    for one_tile in one_villager.land.tiles:
+                        if one_tile.image_rect.collidepoint(pos):
+                            clicked_tile.append(one_tile)
                 # debug_print("clicked image => " + str(clicked_sprites))
-                if len(clicked_sprites) > 0:
-                    clicked_sprites[0][1].image.set_alpha(100)
+                if len(clicked_skills) > 0:
+                    clicked_skills[0][1].image.set_alpha(100)
+
+                if len(clicked_tile) > 0:
+                    for one_tile in clicked_tile:
+                        one_tile.un_mature()
 
         pygame.display.flip()
         clock.tick(Constant.FRAME_PER_SECOND)

@@ -22,11 +22,13 @@ class Constant:
     CHICKEN_IMAGE = "./assets/plant_animal/chicken.png"
     CHICHEN_EGG_IMAGE_SCALE = 1
     CHICEN_IAMGE_SCALE = 1
+    CHICKEN_MATURE_COUNT_DOWN = 100
 
     TREE_IMAGE = "./assets/plant_animal/tree.png"
     TREE_WITH_APPLE_IMAGE = "./assets/plant_animal/tree_with_apple.png"
-    TREE_IMAGE_SCALE = 0.2
-    TREE_WITH_APPLE_IMAGE_SCALE = 0.2
+    TREE_IMAGE_SCALE = 0.3
+    TREE_WITH_APPLE_IMAGE_SCALE = 0.3
+    TREE_MATURE_COUNT_DOWN = 60
 
     TILE_IMAGE_SCALE = 0.3
 
@@ -35,6 +37,12 @@ class Constant:
     SKILL_IMAGES = ['./assets/skill_icons/'+str(f) for f in os.listdir('./assets/skill_icons') if f.endswith('.png')]
     VILLAGER_IMAGES = ["assets/villager_m.png", "assets/villager_f.png"]
     MONSTER_IMAGE = "assets/monster.png"
+    MONSTER_ATTACK_POWER = 0.5
+    MONSTER_ATTACK_IMAGE = "assets/monster_attack.png"
+    ATTACK_DISPLAY_COUNT_DOWN = 10
+    MONSTER_ATTACK_FREQUENT = 10
+
+
     PLAYER_IMAGE = "assets/sage.png"
 
     SKILL_IMAGE_SCALE = 0.2
