@@ -69,6 +69,8 @@ class RaftPeer:
         self.raft_peer_state = RaftPeerState(self.my_addr_port_tuple, self.peer_id)
         # btw 100ms - 150ms
         # random_timeout = random.randint(100, 150)/1000
+        # set time as seed
+        random.seed(time.time())
         random_timeout = random.randint(10000, 15000) / 1000
         logger.debug(" random_timeout =>  " + str(random_timeout), extra=self.my_detail)
         self.timeout_counter =TimeoutCounter(random_timeout, self.my_addr_port_tuple, self.peer_id, self.raft_peer_state)

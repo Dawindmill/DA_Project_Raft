@@ -13,3 +13,7 @@
 - Bridging Raft and Game
 - Report
 - Snapshot Algorithm based on Raft Leader Election
+
+## Current Game Screenshot
+
+![Image of Game Screenshot](./current_game_screenshot.png)
