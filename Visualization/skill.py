@@ -17,11 +17,10 @@ class Skill(Image):
 
     def render(self, screen):
         if self.applied:
-            # self.image.set_alpha()
+            self.image.set_alpha(255)
             self.image_rect = screen.blit(self.image, (self.x - self.width//2, self.y - self.height//2))
 
         else:
-            debug_print("false ")
             self.image.set_alpha(100)
             self.image_rect = screen.blit(self.image, (self.x - self.width//2, self.y - self.height//2))
 

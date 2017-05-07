@@ -87,7 +87,7 @@ def start_game(screen, font, villager_images, monster_image, skills, clock, vill
                 one_monster.render(screen)
 
             # inspired from http://stackoverflow.com/questions/6339057/draw-a-transparent-rectangle-in-pygame
-            s = pygame.Surface((Constant.SCREEN_HEIGHT, Constant.SCREEN_WIDTH))  # the size of your rect
+            s = pygame.Surface((Constant.SCREEN_WIDTH, Constant.SCREEN_HEIGHT))  # the size of your rect
             s.set_alpha(200)  # alpha level
             s.fill(Constant.BLACK)  # this fills the entire surface
             screen.blit(s, (0, 0))  # (0,0) are the top-left coordinates
@@ -120,7 +120,7 @@ def start_game(screen, font, villager_images, monster_image, skills, clock, vill
                             clicked_tile.append(one_tile)
                 # debug_print("clicked image => " + str(clicked_sprites))
                 if len(clicked_skills) > 0:
-                    clicked_skills[0][1].image.set_alpha(100)
+                    clicked_skills[0][1].applied = False
 
                 if len(clicked_tile) > 0:
                     for one_tile in clicked_tile:

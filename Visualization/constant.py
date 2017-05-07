@@ -16,6 +16,8 @@ class Constant:
     FENCE_IMAGE = "./assets/fence.png"
     FENCE_SCALE = 1.12
     HOUSE_IMAGE = "./assets/house.png"
+    HOUSE_DURABILITY = 5
+    HOUSE_IMAGE_SCALE = 0.3
 
     TILE_TYPE_PLANT = "plant"
     TILE_PLANT_IMAGE = "./assets/tiles/grass_tile.png"
@@ -44,7 +46,8 @@ class Constant:
     SKILL_IMAGES = ['./assets/skill_icons/'+str(f) for f in os.listdir('./assets/skill_icons') if f.endswith('.png')]
     VILLAGER_IMAGES = ["assets/villager_m.png", "assets/villager_f.png"]
     MONSTER_IMAGE = "assets/monster.png"
-    MONSTER_ATTACK_POWER = 0.5
+    # MONSTER_ATTACK_POWER = 0.5
+    MONSTER_ATTACK_POWER = 2
     MONSTER_ATTACK_IMAGE = "assets/monster_attack.png"
     ATTACK_DISPLAY_COUNT_DOWN = 10
     MONSTER_ATTACK_FREQUENT = 10
@@ -92,8 +95,10 @@ class Constant:
     MESSAGE_TIME = 5 * FRAME_PER_SECOND
 
     ONE_DAY = 20 * FRAME_PER_SECOND
+    # ONE_DAY = 50
     DAY_TIME = ONE_DAY / 4 * 3
     NIGHT_TIME = ONE_DAY / 4
+    # NIGHT_TIME = 50
 
     DEBUG = True
 
