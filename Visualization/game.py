@@ -67,12 +67,11 @@ def start_game(screen, font, villager_images, monster_image, skills, clock, vill
             if not v.dead:
                 v.render(screen)
         # find leader
+
         player.find_leader(villagers)
         player.render(screen)
 
-
         for one_monster in monsters:
-            one_monster.attack_or_not(villagers)
             one_monster.render(screen)
 
         for one_skill in skills.values():
@@ -81,13 +80,18 @@ def start_game(screen, font, villager_images, monster_image, skills, clock, vill
         if day_countdown <= 0:
             day_countdown = Constant.ONE_DAY
         elif day_countdown <= Constant.NIGHT_TIME:
+
+            for one_monster in monsters:
+                villagers_not_dead = [one_villager for one_villager in villagers if not one_villager.dead]
+                one_monster.attack_or_not(villagers_not_dead, True)
+                one_monster.render(screen)
+
             # inspired from http://stackoverflow.com/questions/6339057/draw-a-transparent-rectangle-in-pygame
-            s = pygame.Surface((1000, 750))  # the size of your rect
+            s = pygame.Surface((Constant.SCREEN_HEIGHT, Constant.SCREEN_WIDTH))  # the size of your rect
             s.set_alpha(200)  # alpha level
             s.fill(Constant.BLACK)  # this fills the entire surface
             screen.blit(s, (0, 0))  # (0,0) are the top-left coordinates
-
-            debug_print("night")
+            # debug_print("night")
 
 
         day_countdown -= 1
@@ -150,7 +154,7 @@ def main():
     index = 0
     for skill_name, skill_image in skill_images.items():
         # discard the suffix
-        skills[skill_name.split(".")[0]] = Skill(skill_name, skill_image,50 + index * ((skill_image.get_rect().size)[0] * Constant.SKILL_IMAGE_SCALE), Constant.SCREEN_HEIGHT - 50)
+        skills[skill_name.split(".")[0]] = Skill(skill_name, skill_image,50 + index * ((skill_image.get_rect().size)[0] * Constant.SKILL_IMAGE_SCALE), Constant.SCREEN_HEIGHT - 50, Constant.SKILL_IMAGE_SCALE,True)
         index += 1
     player = Player(player_image, Constant.SAGE_POSITION[0], Constant.SAGE_POSITION[1])
     start_game(screen, font, villager_images, monster_image, skills, clock, villager_connections, player)

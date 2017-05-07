@@ -13,6 +13,10 @@ class Constant:
     GREEN = (0, 225, 0)
     BLUE = (0, 0, 225)
 
+    FENCE_IMAGE = "./assets/fence.png"
+    FENCE_SCALE = 1.12
+    HOUSE_IMAGE = "./assets/house.png"
+
     TILE_TYPE_PLANT = "plant"
     TILE_PLANT_IMAGE = "./assets/tiles/grass_tile.png"
     TILE_TYPE_ANIMAP = "animal"
@@ -23,12 +27,15 @@ class Constant:
     CHICHEN_EGG_IMAGE_SCALE = 1
     CHICEN_IAMGE_SCALE = 1
     CHICKEN_MATURE_COUNT_DOWN = 100
+    ANIMAL_HEALTH_INCREASE = 1
+
 
     TREE_IMAGE = "./assets/plant_animal/tree.png"
     TREE_WITH_APPLE_IMAGE = "./assets/plant_animal/tree_with_apple.png"
     TREE_IMAGE_SCALE = 0.3
     TREE_WITH_APPLE_IMAGE_SCALE = 0.3
     TREE_MATURE_COUNT_DOWN = 60
+    PLANT_HEALTH_INCREASE = 0.5
 
     TILE_IMAGE_SCALE = 0.3
 

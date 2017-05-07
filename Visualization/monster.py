@@ -21,9 +21,9 @@ class Monster(Image):
 
 
 
-    def attack_or_not(self, villager_list):
+    def attack_or_not(self, villager_list_not_dead, night = False):
 
-        if self.attack_frequent > 0:
+        if self.attack_frequent > 0 and night:
             self.attack_frequent -= 1
             return
         else:
@@ -34,9 +34,9 @@ class Monster(Image):
 
         self.attacked = random.random() >= self.attack_probability
 
-        if self.attacked:
-            attack_index = random.randint(0, len(villager_list) - 1)
-            villager = villager_list[attack_index]
+        if self.attacked and len(villager_list_not_dead) != 0:
+            attack_index = random.randint(0, len(villager_list_not_dead) - 1)
+            villager = villager_list_not_dead[attack_index]
             villager.set_attack(self.attack_power)
             self.attack = Attack(villager.x, villager.y)
             self.attack_display_count_down = self.attack_display_count_down_const

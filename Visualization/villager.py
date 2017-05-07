@@ -41,7 +41,6 @@ class Villager(Image, threading.Thread):
         self.attack_display_count_down = Constant.ATTACK_DISPLAY_COUNT_DOWN
         self.attack_display_count_down_const = Constant.ATTACK_DISPLAY_COUNT_DOWN
         self.attack = Attack(self.x, self.y)
-        self.dead = False
 
         self.land = Land(self, Constant.LAND_SIZE)
 
@@ -59,7 +58,7 @@ class Villager(Image, threading.Thread):
         skill_num = len(self.skills)
 
         # each row render four skill, then go up
-        one_skill = Skill(skill_name, skill_image, self.x - self.width/2 + (int (skill_num%4) * ((skill_image.get_rect().size)[0] * Constant.SKILL_IMAGE_SCALE_VILLAGER)), (self.y - self.height/2) - 15 - (int(skill_num / 4) * int((skill_image.get_rect().size)[1] * Constant.SKILL_IMAGE_SCALE_VILLAGER)), Constant.SKILL_IMAGE_SCALE_VILLAGER)
+        one_skill = Skill(skill_name, skill_image, self.x - self.width/2 + (int (skill_num%4) * ((skill_image.get_rect().size)[0] * Constant.SKILL_IMAGE_SCALE_VILLAGER)), (self.y - self.height/2) - 15 - (int(skill_num / 4) * int((skill_image.get_rect().size)[1] * Constant.SKILL_IMAGE_SCALE_VILLAGER)), Constant.SKILL_IMAGE_SCALE_VILLAGER, False)
         self.skills.append(one_skill)
 
     def set_leader_role(self, role):
@@ -108,6 +107,12 @@ class Villager(Image, threading.Thread):
 
     def current_health_down(self):
         self.current_health -= 1
+
+    def grab_plant_or_animal(self, tiles):
+        for one_tile in tiles:
+            if one_tile.mature:
+                self.current_health_up_with_amount(one_tile.increase_health_amount)
+                one_tile.un_mature
 
     def current_health_down_with_amount(self, hp_decrement):
         if hp_decrement >= self.current_health:
