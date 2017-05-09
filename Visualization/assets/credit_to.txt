@@ -1,2 +1,4 @@
 monster attack -> https://www.spriters-resource.com/snes/ff5/sheet/56173/
 fence -> https://opengameart.org/content/pixel-house-and-fence
+armour -> https://opengameart.org/content/loyalty-lies-equipment-shields
+sword -> https://opengameart.org/content/medieval-sword

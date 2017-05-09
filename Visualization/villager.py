@@ -10,6 +10,10 @@ import pygame
 from land import Land
 from attack import Attack
 from house import House
+from item import Item
+from constant_image import ConstantImage
+
+
 class Villager(Image, threading.Thread):
 
     HEAL_BAR_HEIGHT = 5
@@ -39,16 +43,37 @@ class Villager(Image, threading.Thread):
         self.villager_id = villager_id
         self.font = font
         self.attacked = False
+        self.item = []
         # self.attack_display_count_down = Constant.ATTACK_DISPLAY_COUNT_DOWN
         # self.attack_display_count_down_const = Constant.ATTACK_DISPLAY_COUNT_DOWN
-        # self.attack = Attack(self.x, self.y)
+        self.attack = None
+
+        #Attack(ConstantImage.VILLAGER_ATTACK_IMAGE_SPRITE, self.x, self.y)
 
         self.land = Land(self, Constant.LAND_SIZE)
 
         self.house = House(self.x, self.y)
 
+        self.addItemToLeftHand(ConstantImage.ARMOUR_IMAGE_SPRITE,Constant.ITEM_NAME_ARMOUR ,Constant.ARMOUR_IMAGE_SCLAE)
+        self.addItemToRightHand(ConstantImage.SWORD_IMAGE_SPRITE, Constant.ITEM_NAME_SWORD, Constant.SWORD_IMAGE_SCALE)
+
         # self.request_parser = VillagerListener(self)
         # threading.Thread.__init__(self)
+
+    # armour
+    def addItemToLeftHand(self, image, item_name, image_scale):
+        width, height = image.get_rect().size
+        temp_item_center_x = self.x + width * image_scale // 2
+        temp_item_center_y = self.y + width * image_scale
+        temp_item = Item(image, temp_item_center_x, temp_item_center_y, item_name, image_scale)
+        self.item.append(temp_item)
+    # sword
+    def addItemToRightHand(self, image, item_name, image_scale):
+        width, height = image.get_rect().size
+        temp_item_center_x = self.x - width * image_scale
+        temp_item_center_y = self.y
+        temp_item = Item(image, temp_item_center_x, temp_item_center_y, item_name, image_scale)
+        self.item.append(temp_item)
 
     def set_attack(self, hp_decrement):
         # self.attacked = True
@@ -178,6 +203,8 @@ class Villager(Image, threading.Thread):
             self.message_count += 1
             if self.message_count > 5:
                 self.message_count = 1
+        for one_item in self.item:
+            one_item.render(screen)
 
         # if self.attacked & self.attack_display_count_down != 0:
         #     self.attack.render(screen)

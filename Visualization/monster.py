@@ -2,6 +2,7 @@ from image import Image
 from constant import *
 import random
 from attack import Attack
+from constant_image import ConstantImage
 
 
 class Monster(Image):
@@ -17,7 +18,7 @@ class Monster(Image):
         self.attack_display_count_down = Constant.ATTACK_DISPLAY_COUNT_DOWN
         self.attack_display_count_down_const = Constant.ATTACK_DISPLAY_COUNT_DOWN
         self.attacked = False
-        self.attack = Attack(self.x, self.y)
+        self.attack = None
 
 
 
@@ -38,7 +39,7 @@ class Monster(Image):
             attack_index = random.randint(0, len(villager_list_not_dead) - 1)
             villager = villager_list_not_dead[attack_index]
             villager.set_attack(self.attack_power)
-            self.attack = Attack(villager.x, villager.y)
+            self.attack = Attack(ConstantImage.MONSTER_ATTACK_IMAGE_SPRITE, villager.x, villager.y)
             self.attack_display_count_down = self.attack_display_count_down_const
             self.x = villager.x - villager.width//2
             self.y = villager.y + int (random.random() * villager.height)

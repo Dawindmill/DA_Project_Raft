@@ -11,9 +11,19 @@ class Skill(Image):
 
 
     def skill_handler(self, villagers_list, monster, player):
-        self.skill_name == "apple"
-        self.set_health(villagers_list)
-        print()
+        skill_name_handler = {
+            "animal": self.animal_handler,
+            "armour": self.armour_handler,
+            "bow": self.bow_handler,
+            "gym": self.armour_handler,
+            "plant": self.plant_handler,
+            "sword": self.sword_handler,
+            "tool": self.tool_handler
+        }
+
+        skill_function = skill_name_handler[self.skill_name]
+        skill_function()
+
 
     def render(self, screen):
         if self.applied:

@@ -13,6 +13,17 @@ class Constant:
     GREEN = (0, 225, 0)
     BLUE = (0, 0, 225)
 
+    ITEM_NAME_SWORD = "sword"
+    ITEM_NAME_SWORD_ATTACK_POWER_ADD = 1
+    ITEM_NAME_ARMOUR = "armour"
+    ITEM_ARMOUR_DEFEND_POWER_ADD = 0.5
+
+    ARMOUR_IMAGE = "./assets/armour.png"
+    ARMOUR_IMAGE_SCLAE = 0.1
+    SWORD_IMAGE = "./assets/sword.png"
+    SWORD_IMAGE_SCALE = 0.25
+    VILLAGER_ATTACK_IMAGE= "./assets/villager_attack.png"
+
     FENCE_IMAGE = "./assets/fence.png"
     FENCE_SCALE = 1.12
     HOUSE_IMAGE = "./assets/house.png"
