@@ -60,6 +60,17 @@ class Villager(Image, threading.Thread):
         # self.request_parser = VillagerListener(self)
         # threading.Thread.__init__(self)
 
+    def pickTile(self, tile):
+        if tile.mature:
+            if tile.tile_type == Constant.TILE_TYPE_PLANT:
+                self.current_health_up_with_amount(Constant.PLANT_HEALTH_INCREASE)
+            elif tile.tile_type == Constant.TILE_TYPE_ANIMAL:
+                self.current_health_up_with_amount(Constant.ANIMAL_HEALTH_INCREASE)
+            tile.un_mature()
+
+    def addHouse(self):
+        self.house = House(self.x, self.y)
+
     # armour
     def addItemToLeftHand(self, image, item_name, image_scale):
         width, height = image.get_rect().size
@@ -136,15 +147,15 @@ class Villager(Image, threading.Thread):
     def current_health_down(self):
         self.current_health -= 1
 
-    def grab_plant_or_animal(self, tiles):
-        for one_tile in tiles:
-            if one_tile.mature:
-                self.current_health_up_with_amount(one_tile.increase_health_amount)
-                one_tile.un_mature
+
+    def current_health_up_with_amount(self, hp_increment):
+        self.current_health += hp_increment
+        if self.current_health > self.max_health:
+            self.current_health = self.max_health
 
     def current_health_down_with_amount(self, hp_decrement):
 
-        if self.house.display_house:
+        if self.house is not None and self.house.display_house:
             self.house.house_durability_decrement_with_amount(hp_decrement)
             return
 

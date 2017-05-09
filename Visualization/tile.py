@@ -53,7 +53,8 @@ class Tile(Image):
 
     def render(self, screen):
 
-        if not self.mature:
+        # only when displayed and not matured count down is operating to let it be mature
+        if not self.mature and self.display_plant_or_animal:
             self.count_down -= 1
         if self.count_down == 0:
             self.mature = True

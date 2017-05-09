@@ -19,7 +19,7 @@ class Land:
             self.tiles.append(Tile(Constant.TILE_TYPE_PLANT, self.land_ownder.x, self.land_ownder.y, self.land_ownder.height, 0, i ))
 
         for i in range(self.land_size//2):
-            self.tiles.append(Tile(Constant.TILE_ANIMAL_IMAGE, self.land_ownder.x, self.land_ownder.y, self.land_ownder.height, 1, i))
+            self.tiles.append(Tile(Constant.TILE_TYPE_ANIMAL, self.land_ownder.x, self.land_ownder.y, self.land_ownder.height, 1, i))
 
 
     def render(self, screen):

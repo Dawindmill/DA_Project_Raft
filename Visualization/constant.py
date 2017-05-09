@@ -32,7 +32,7 @@ class Constant:
 
     TILE_TYPE_PLANT = "plant"
     TILE_PLANT_IMAGE = "./assets/tiles/grass_tile.png"
-    TILE_TYPE_ANIMAP = "animal"
+    TILE_TYPE_ANIMAL = "animal"
     TILE_ANIMAL_IMAGE = "./assets/tiles/animal_tile.png"
 
     CHICKEN_EGG_IMAGE = "./assets/plant_animal/egg.png"

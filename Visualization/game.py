@@ -47,10 +47,7 @@ def start_game(screen, font, villager_images, monster_image, skills, clock, vill
 
             # test setting skill
             villager.add_skill("animal", skills["animal"].image_sprite)
-            villager.add_skill("bow", skills["bow"].image_sprite)
-            villager.add_skill("fix", skills["fix"].image_sprite)
             villager.add_skill("armour", skills["armour"].image_sprite)
-            villager.add_skill("gym", skills["gym"].image_sprite)
 
             # SET LEADER TO FIRST FEMALE FOR TESTING
             if gender == 1:
@@ -113,18 +110,21 @@ def start_game(screen, font, villager_images, monster_image, skills, clock, vill
                 pos = pygame.mouse.get_pos()
                 # debug_print(str(skills))
                 clicked_skills = [(skill_name, one_skill) for skill_name, one_skill in skills.items() if one_skill.image_rect.collidepoint(pos)]
-                clicked_tile = []
+                clicked_villager_tiles_tuple = []
                 for one_villager in villagers:
+                    temp_tiles = []
                     for one_tile in one_villager.land.tiles:
                         if one_tile.image_rect.collidepoint(pos):
-                            clicked_tile.append(one_tile)
+                            temp_tiles.append(one_tile)
+                    clicked_villager_tiles_tuple.append((one_villager, temp_tiles))
                 # debug_print("clicked image => " + str(clicked_sprites))
                 if len(clicked_skills) > 0:
                     clicked_skills[0][1].applied = False
 
-                if len(clicked_tile) > 0:
-                    for one_tile in clicked_tile:
-                        one_tile.un_mature()
+                if len(clicked_villager_tiles_tuple) > 0:
+                    for one_villager, one_tile_list in clicked_villager_tiles_tuple:
+                        for one_tile in one_tile_list:
+                            one_villager.pickTile(one_tile)
 
         pygame.display.flip()
         clock.tick(Constant.FRAME_PER_SECOND)
