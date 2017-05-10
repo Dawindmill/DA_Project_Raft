@@ -12,11 +12,12 @@ from attack import Attack
 from house import House
 from item import Item
 from constant_image import ConstantImage
+import random
 
 
 class Villager(Image, threading.Thread):
 
-    HEAL_BAR_HEIGHT = 5
+
     # for testing purpose only want to create one leader
     leader_taken = False
 
@@ -25,7 +26,7 @@ class Villager(Image, threading.Thread):
         self.message_count = 1
         # for testing to only create one leader
         self.skills = []
-        self.max_health = 2.0
+        self.max_health = Constant.VILLAGER_MAX_HP
         self.current_health = 1.0
         self.requests = []
         self.current_message = ""
@@ -59,6 +60,13 @@ class Villager(Image, threading.Thread):
 
         # self.request_parser = VillagerListener(self)
         # threading.Thread.__init__(self)
+
+        self.attack_probability = 0.5
+        self.attack_display_count_down = Constant.ATTACK_DISPLAY_COUNT_DOWN
+        self.attack_display_count_down_const = Constant.ATTACK_DISPLAY_COUNT_DOWN
+        self.attacked = False
+        self.attack_power = 1
+
 
     def pickTile(self, tile):
         if tile.mature:
@@ -153,6 +161,23 @@ class Villager(Image, threading.Thread):
         if self.current_health > self.max_health:
             self.current_health = self.max_health
 
+
+    def attack_monster_or_not(self, monster):
+
+        if self.attacked:
+            return
+
+        self.attacked = random.random() >= self.attack_probability
+
+        if self.attacked and self.attack_power > 0 :
+            monster.set_attack(self.attack_power)
+            self.attack = Attack(ConstantImage.VILLAGER_ATTACK_IMAGE_SPRITE, monster.x, monster.y, Constant.VILLAGER_ATTACK_IMAGE_SCLAE)
+            self.attack_display_count_down = self.attack_display_count_down_const
+
+        else:
+            self.attacked = False
+
+
     def current_health_down_with_amount(self, hp_decrement):
 
         if self.house is not None and self.house.display_house:
@@ -165,7 +190,15 @@ class Villager(Image, threading.Thread):
             return
         self.current_health -= hp_decrement
 
+    def render_attack(self, screen):
+        if self.attacked and self.attack_display_count_down != 0:
+            self.attack.render(screen)
+            self.attack_display_count_down -= 1
+            if self.attack_display_count_down <= 0:
+                self.attacked = False
+
     def render(self, screen):
+
         if self.house.display_house:
             self.house.render(screen)
 
@@ -195,11 +228,11 @@ class Villager(Image, threading.Thread):
 
         pygame.draw.rect(screen, Constant.GRAY, pygame.Rect((self.x - self.width // 2,
                                                     self.y - self.height // 2),
-                                                   (self.width, Villager.HEAL_BAR_HEIGHT)))
+                                                   (self.width, Constant.HEAL_BAR_HEIGHT)))
         pygame.draw.rect(screen, Constant.RED, pygame.Rect((self.x - self.width // 2,
                                                    self.y - self.height // 2),
                                                   (self.width * (self.current_health / self.max_health),
-                                                   Villager.HEAL_BAR_HEIGHT)))
+                                                   Constant.HEAL_BAR_HEIGHT)))
 
         if self.role == Role.LEADER:
 
@@ -216,6 +249,7 @@ class Villager(Image, threading.Thread):
                 self.message_count = 1
         for one_item in self.item:
             one_item.render(screen)
+
 
         # if self.attacked & self.attack_display_count_down != 0:
         #     self.attack.render(screen)

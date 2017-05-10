@@ -23,6 +23,7 @@ class Constant:
     SWORD_IMAGE = "./assets/sword.png"
     SWORD_IMAGE_SCALE = 0.25
     VILLAGER_ATTACK_IMAGE= "./assets/villager_attack.png"
+    VILLAGER_ATTACK_IMAGE_SCLAE = 0.2
 
     FENCE_IMAGE = "./assets/fence.png"
     FENCE_SCALE = 1.12
@@ -56,12 +57,15 @@ class Constant:
 
     SKILL_IMAGES = ['./assets/skill_icons/'+str(f) for f in os.listdir('./assets/skill_icons') if f.endswith('.png')]
     VILLAGER_IMAGES = ["assets/villager_m.png", "assets/villager_f.png"]
+    VILLAGER_MAX_HP = 2.0
     MONSTER_IMAGE = "assets/monster.png"
     # MONSTER_ATTACK_POWER = 0.5
     MONSTER_ATTACK_POWER = 2
     MONSTER_ATTACK_IMAGE = "assets/monster_attack.png"
-    ATTACK_DISPLAY_COUNT_DOWN = 10
+    MONSTER_ATTACK_IMAGE_SCALE = 1
+    ATTACK_DISPLAY_COUNT_DOWN = 20
     MONSTER_ATTACK_FREQUENT = 10
+    MONSTER_MAX_HP = 5.0
 
 
     PLAYER_IMAGE = "assets/sage.png"
@@ -105,12 +109,13 @@ class Constant:
 
     MESSAGE_TIME = 5 * FRAME_PER_SECOND
 
-    ONE_DAY = 20 * FRAME_PER_SECOND
-    # ONE_DAY = 50
+    # ONE_DAY = 20 * FRAME_PER_SECOND
+    ONE_DAY = 70
     DAY_TIME = ONE_DAY / 4 * 3
-    NIGHT_TIME = ONE_DAY / 4
-    # NIGHT_TIME = 50
+    # NIGHT_TIME = ONE_DAY / 4
+    NIGHT_TIME = 70
 
     DEBUG = True
 
+    HEAL_BAR_HEIGHT = 5
     # day_countdown = ONE_DAY

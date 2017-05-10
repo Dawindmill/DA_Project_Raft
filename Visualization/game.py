@@ -60,16 +60,26 @@ def start_game(screen, font, villager_images, monster_image, skills, clock, vill
             villager_count += 1
             next_villager_id += 1
         screen.fill(Constant.WHITE)
-        for v in villagers:
-            if not v.dead:
-                v.render(screen)
+        for one_villager in villagers:
+            if not one_villager.dead:
+                one_villager.render(screen)
         # find leader
 
         player.find_leader(villagers)
         player.render(screen)
 
         for one_monster in monsters:
-            one_monster.render(screen)
+            if not one_monster.dead:
+                one_monster.render(screen)
+
+        # render attack
+        for one_villager in villagers:
+            if not one_villager.dead:
+                one_villager.render_attack(screen)
+
+        for one_monster in monsters:
+            if not one_monster.dead:
+                one_monster.render_attack(screen)
 
         for one_skill in skills.values():
             one_skill.render(screen)
@@ -80,8 +90,8 @@ def start_game(screen, font, villager_images, monster_image, skills, clock, vill
 
             for one_monster in monsters:
                 villagers_not_dead = [one_villager for one_villager in villagers if not one_villager.dead]
-                one_monster.attack_or_not(villagers_not_dead, True)
-                one_monster.render(screen)
+                one_monster.attack_villager_or_not(villagers_not_dead, True)
+                # one_monster.render(screen)
 
             # inspired from http://stackoverflow.com/questions/6339057/draw-a-transparent-rectangle-in-pygame
             s = pygame.Surface((Constant.SCREEN_WIDTH, Constant.SCREEN_HEIGHT))  # the size of your rect
