@@ -1,6 +1,8 @@
 import logging
-logger = logging.getLogger("AppendEntiesLeader")
 from LogData import LogData
+
+logger = logging.getLogger("AppendEntiesLeader")
+
 
 class AppendEntriesLeader:
     # for leader to initialize appen entry

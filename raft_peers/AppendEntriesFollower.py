@@ -1,6 +1,9 @@
 import logging
-logger = logging.getLogger("AppendEntiesFollower")
 from LogData import LogData
+
+logger = logging.getLogger("AppendEntiesFollower")
+
+
 class AppendEntriesFollower:
     #for follower to receive it
     def __init__(self, append_entries_json_data_dict, raft_peer_state):

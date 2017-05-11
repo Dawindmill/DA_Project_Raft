@@ -6,9 +6,7 @@ from TimeoutCounter import TimeoutCounter
 
 
 FORMAT = '[TimeoutCounter][%(asctime)-15s][%(levelname)s][%(peer_id)s][%(host)s][%(port)s][%(funcName)s] %(message)s'
-logging.basicConfig(format=FORMAT, level = logging.DEBUG, filename="raft_log_file", filemode="w")
-logger = logging.getLogger("RequestVote")
-logger.setLevel(logging.DEBUG)
+logging.basicConfig(format=FORMAT, level = logging.DEBUG, filename="logs/raft_log_file", filemode="w")
 
 '''
 Author: Bingfeng Liu

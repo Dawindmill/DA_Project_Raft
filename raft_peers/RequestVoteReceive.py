@@ -1,7 +1,6 @@
 import logging
 
 logger = logging.getLogger("RequestVote")
-logger.setLevel(logging.DEBUG)
 
 class RequestVoteReceive:
     def __init__(self, request_vote_json_dict, raft_peer_state):

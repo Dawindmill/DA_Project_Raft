@@ -20,8 +20,6 @@ import threading
 Author: Bingfeng Liu
 Date: 16/04/2017
 '''
-FORMAT = '[%(module)s][%(asctime)-15s][%(levelname)s][%(peer_id)s][%(host)s][%(port)s][%(funcName)s] %(message)s'
-logging.basicConfig(format=FORMAT, level = logging.DEBUG, filename="raft_log_file", filemode="w")
 logger = logging.getLogger("RaftPeer")
 
 
@@ -95,6 +93,7 @@ class RaftPeer:
             self.thread_user_listen.daemon = True
             self.thread_user_listen.start()
             logger.debug( " start thread => accept user successful ", extra = self.my_detail)
+
 
 
         except Exception as e:
