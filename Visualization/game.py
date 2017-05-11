@@ -16,6 +16,7 @@ from player import Player
 from skill import  Skill
 import sys
 import os
+from night_event import NightEvent
 
 day_countdown = Constant.ONE_DAY
 
@@ -162,6 +163,8 @@ def main():
     monster_image = pygame.image.load(Constant.MONSTER_IMAGE)
     clock = pygame.time.Clock()
     villager_connections = []
+    night_event = NightEvent()
+    night_event.getEvent()
     # listener = ConnectionListener(villager_connections)
     # listener.start()
     index = 0

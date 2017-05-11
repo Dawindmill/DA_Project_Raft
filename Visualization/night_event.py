@@ -1,13 +1,15 @@
 import threading
 from constant import Constant
+import random
+
 class NightEvent(threading.Thread):
-    Events = {"monster": []}
+    events = {"monster": ["attack"],
+              "villager": []}
 
-    def __init__(self, game):
+    def __init__(self):
         self.current_event = None
-        super().__init__(self)
-        self.game = game
+        threading.Thread.__init__(self)
+        #self.game = game
 
-    def random_event(self):
-        if self.game.day_countdown < Constant.NIGHT_TIME and self.current_event == None:
-            print()
+    def getEvent(self):
+        print(random.choice(self.events["monster"]))
