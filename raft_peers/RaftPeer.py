@@ -89,11 +89,11 @@ class RaftPeer:
             self.thread_peer_listen.start()
             logger.debug( " start thread => accept peer servers successful ", extra = self.my_detail)
 
+            # listen for user.py
             self.thread_user_listen = threading.Thread(target=self.accept, args=(self.user_socket, self.user_addr_listen_socket,))
             self.thread_user_listen.daemon = True
             self.thread_user_listen.start()
             logger.debug( " start thread => accept user successful ", extra = self.my_detail)
-
 
 
         except Exception as e:
@@ -307,8 +307,8 @@ class RaftPeer:
                     self.connect_to_peer((str(one_peer_addr), int(one_peer_port)))
                     break
                 except Exception as e:
-                    logger.debug("raft peer connect to " + str(one_peer_addr, one_peer_port) + " failed retry, exception => " + str(e), extra=self.my_detail)
-                    time.sleep(0.01)
+                    logger.debug("raft peer connect to " + str((one_peer_addr, one_peer_port)) + " failed retry, exception => " + str(e), extra=self.my_detail)
+                    time.sleep(0.1)
         logger.debug("raft peer connect to all peers successful", extra=self.my_detail)
 
     def connect_to_peer(self, peer_addr_port_tuple):
