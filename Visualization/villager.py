@@ -17,7 +17,7 @@ import random
 
 class Villager(Image, threading.Thread):
 
-
+    lock = threading.RLock()
     # for testing purpose only want to create one leader
     leader_taken = False
 
@@ -171,7 +171,7 @@ class Villager(Image, threading.Thread):
 
         if self.attacked and self.attack_power > 0 :
             monster.set_attack(self.attack_power)
-            self.attack = Attack(ConstantImage.VILLAGER_ATTACK_IMAGE_SPRITE, monster.x, monster.y, Constant.VILLAGER_ATTACK_IMAGE_SCLAE)
+            self.attack = Attack(ConstantImage.VILLAGER_ATTACK_IMAGE_SPRITE, monster.x, monster.y, Constant.VILLAGER_ATTACK_IMAGE_SCALE)
             self.attack_display_count_down = self.attack_display_count_down_const
 
         else:

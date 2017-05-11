@@ -75,6 +75,9 @@ def start_game(screen, font, villager_images, monster_image, skills, clock, vill
         # render attack
         for one_villager in villagers:
             if not one_villager.dead:
+                # apply skills
+                for one_skill_from_villager in one_villager.skills:
+                    one_skill_from_villager.skill_handler(villagers, monsters, player)
                 one_villager.render_attack(screen)
 
         for one_monster in monsters:

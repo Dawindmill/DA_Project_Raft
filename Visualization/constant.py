@@ -23,7 +23,7 @@ class Constant:
     SWORD_IMAGE = "./assets/sword.png"
     SWORD_IMAGE_SCALE = 0.25
     VILLAGER_ATTACK_IMAGE= "./assets/villager_attack.png"
-    VILLAGER_ATTACK_IMAGE_SCLAE = 0.2
+    VILLAGER_ATTACK_IMAGE_SCALE = 0.5
 
     FENCE_IMAGE = "./assets/fence.png"
     FENCE_SCALE = 1.12
@@ -109,13 +109,13 @@ class Constant:
 
     MESSAGE_TIME = 5 * FRAME_PER_SECOND
 
-    # ONE_DAY = 20 * FRAME_PER_SECOND
-    ONE_DAY = 70
+    ONE_DAY = 20 * FRAME_PER_SECOND
+    # ONE_DAY = 70
     DAY_TIME = ONE_DAY / 4 * 3
-    # NIGHT_TIME = ONE_DAY / 4
-    NIGHT_TIME = 70
+    NIGHT_TIME = ONE_DAY / 4
+    # NIGHT_TIME = 70
 
     DEBUG = True
 
     HEAL_BAR_HEIGHT = 5
-    # day_countdown = ONE_DAY
+    day_countdown = ONE_DAY
