@@ -32,7 +32,7 @@ if __name__ == '__main__':
     except Exception as e:
         sys.exit(str(e) + " Please check the format of raft_peer.ini file, it should contain raft_peer_listen_port and raft_peer_client_port")
 
-    FORMAT = '[TimeoutCounter][%(asctime)-15s][%(levelname)s][%(peer_id)s][%(host)s][%(port)s][%(funcName)s] %(message)s'
+    FORMAT = '[%(module)s][%(asctime)-15s][%(levelname)s][%(peer_id)s][%(host)s][%(port)s][%(funcName)s] %(message)s'
     logging.basicConfig(format=FORMAT, level=logging.DEBUG, filename= ("logs/" + cur_peer_name+"_raft_log_file"), filemode="w")
 
     print ("host_ip => " + host_ip)

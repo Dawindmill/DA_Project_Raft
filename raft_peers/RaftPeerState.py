@@ -43,7 +43,7 @@ class RaftPeerState:
             self.leader_majority_count += 1
 
     def elected_leader(self, majority):
-        if self.leader_majority_count >= majority and self.peer_state == "candidate":
+        if int(self.leader_majority_count) >= majority and self.peer_state == "candidate":
             self.peer_state = "leader"
             self.leader_majority_count = 0
             return True

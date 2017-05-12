@@ -90,11 +90,11 @@ class AppendEntriesFollower:
             #if follower is not longer than leader
             if prev_log_index == (len(self.raft_peer_state.state_log) - 1):
                 self.raft_peer_state.state_log.append(one_new_log_data)
+                prev_log_index += 1
             #if follower id longer, it can be shorter bc of above filter
             else:
-                # prev_log_index = -1 will come here
                 self.raft_peer_state.state_log[prev_log_index + 1] = one_new_log_data
-                self.raft_peer_state.state_log = self.raft_peer_state.state_log[0:prev_log_index + 2]
+                # self.raft_peer_state.state_log = self.raft_peer_state.state_log[0:prev_log_index + 2]
                 prev_log_index += 1
 
     def process_commit_index(self, commit_index):
