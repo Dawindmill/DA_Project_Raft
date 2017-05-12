@@ -40,6 +40,6 @@ class LogData:
         return return_dict
 
     def check_over_majority(self, majority):
-        if self.majority_count >= majority:
+        if int(self.majority_count) >= int(majority):
             return True
         return False

@@ -1,7 +1,6 @@
 import logging
 
 logger = logging.getLogger("RequestVote")
-logger.setLevel(logging.DEBUG)
 
 class RequestVoteReceive:
     def __init__(self, request_vote_json_dict, raft_peer_state):
@@ -21,6 +20,7 @@ class RequestVoteReceive:
                                "send_from": list(self.raft_peer_state.my_addr_port_tuple),
                                "sender_term": self.raft_peer_state.current_term,
                                "vote_granted": True}
+
         if self.raft_peer_state.peer_state == "leader":
             request_vote_result["vote_granted"] = False
             return request_vote_result
@@ -37,9 +37,9 @@ class RequestVoteReceive:
             request_vote_result["vote_granted"] = False
             return request_vote_result
 
-        if self.raft_peer_state.vote_for != None:
-            request_vote_result["vote_granted"] = False
-            return request_vote_result
+        # if self.raft_peer_state.vote_for != None:
+        #     request_vote_result["vote_granted"] = False
+        #     return request_vote_result
 
         # commit index not used in raft paper
         #if self.raft_peer_state.commit_index >
@@ -47,12 +47,12 @@ class RequestVoteReceive:
         #at least up to date is fine?
         #ini last_log_index is -1 and state_log len is 0
         if (len(self.raft_peer_state.state_log) -1) > self.last_log_index:
-            request_vote_result["vote_grantned"] = False
+            request_vote_result["vote_granted"] = False
             return request_vote_result
         # if same log length, but current peer has newer term, then reject the candidate request
         if (len(self.raft_peer_state.state_log) - 1) == self.last_log_index:
             if self.raft_peer_state.state_log[self.last_log_index].log_term > self.last_log_term:
-                request_vote_result["vote_grantned"] = False
+                request_vote_result["vote_granted"] = False
                 return request_vote_result
 
         self.raft_peer_state.vote_for = self.send_from

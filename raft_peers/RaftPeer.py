@@ -20,8 +20,6 @@ import threading
 Author: Bingfeng Liu
 Date: 16/04/2017
 '''
-FORMAT = '[%(module)s][%(asctime)-15s][%(levelname)s][%(peer_id)s][%(host)s][%(port)s][%(funcName)s] %(message)s'
-logging.basicConfig(format=FORMAT, level = logging.DEBUG, filename="raft_log_file", filemode="w")
 logger = logging.getLogger("RaftPeer")
 
 
@@ -91,6 +89,7 @@ class RaftPeer:
             self.thread_peer_listen.start()
             logger.debug( " start thread => accept peer servers successful ", extra = self.my_detail)
 
+            # listen for user.py
             self.thread_user_listen = threading.Thread(target=self.accept, args=(self.user_socket, self.user_addr_listen_socket,))
             self.thread_user_listen.daemon = True
             self.thread_user_listen.start()
@@ -133,8 +132,8 @@ class RaftPeer:
                         self.raft_peer_state.leader_majority_count = 0
                         # every new term clear old vote_for, might experience new term election
                         self.raft_peer_state.vote_for = None
-                        # force reset timer, since it is outdated
-                        self.timeout_counter.reset_timeout()
+                        # force reset timer, since it is outdated not reseting only vote true then reset and receive append entries
+                        # self.timeout_counter.reset_timeout()
                     if one_recv_json_message_dict["sender_term"] < self.raft_peer_state.current_term:
                         logger.debug(" received outdated term msg abort " + str(one_recv_json_message_dict),
                                      extra=self.my_detail)
@@ -192,26 +191,35 @@ class RaftPeer:
             return
 
         with self.raft_peer_state.lock:
-            # match index can only increase, so we only record when it is true, it is always one less than nextIndex
-            # could be used to optimize finding right nextIndex? let's see later
-            self.raft_peer_state.peers_match_index[tuple(one_recv_json_message_dict["send_from"])] = self.raft_peer_state.peers_next_index[tuple(one_recv_json_message_dict["send_from"])]
-
-            # increase this peer's next index
-            self.raft_peer_state.peers_next_index[tuple(one_recv_json_message_dict["send_from"])] += 1
-
             # heart beat if reply is true, and log start = -1, log end = -1
+            if one_recv_json_message_dict["append_entries_result"] == True:
+                # increase this peer's next index
+                self.raft_peer_state.peers_next_index[tuple(one_recv_json_message_dict["send_from"])] += 1
+                self.raft_peer_state.peers_match_index[tuple(one_recv_json_message_dict["send_from"])] = self.raft_peer_state.peers_next_index[tuple(one_recv_json_message_dict["send_from"])]
 
-            if log_index_start != -1 and log_index_end != -1:
                 #print(" log_index_start " + str(log_index_start) + " log_index_end " + str(log_index_end))
 
                 for one_log in self.raft_peer_state.state_log[log_index_start:(log_index_end + 1)]:
                     one_log.majority_count += 1
-                    if one_log.check_over_majority((self.max_peer_number/2)+1):
+                    if one_log.check_over_majority((self.max_peer_number//2)+1):
                         with self.raft_peer_state.remote_var.lock:
+
+                            self.raft_peer_state.commit_index = one_log.log_index
+                            self.raft_peer_state.last_apply = self.raft_peer_state.commit_index
+
                             if one_log.log_applied == False:
-                                self.raft_peer_state.remote_var.perform_action(one_log.request_command_action_list)
-                                one_log.log_applied = True
-                                self.raft_peer_state.commit_index += 1
+
+                                # make sure all log before it is applied
+                                for i in range(self.raft_peer_state.commit_index + 1):
+                                    one_temp_log = self.raft_peer_state.state_log[i]
+                                    if one_temp_log.log_applied == False:
+                                        self.raft_peer_state.remote_var.perform_action(one_temp_log.request_command_action_list)
+                                        one_temp_log.log_applied = True
+
+
+                                # self.raft_peer_state.remote_var.perform_action(one_log.request_command_action_list)
+                                # one_log.log_applied = True
+
                                 # means user was originally connected to this user
                                 # but if received this json means user is in here
                                 if one_log.request_user_addr_port_tuple != None:
@@ -222,16 +230,19 @@ class RaftPeer:
                                 logger.debug(
                                     " leader update log " + str(self.raft_peer_state),
                                     extra=self.my_detail)
-
-
             else:
                 logger.debug(" starting process_append_entries_follower_reply False" + str(one_recv_json_message_dict),
                              extra=self.my_detail)
+                logger.debug(" starting process_append_entries_follower_reply False next_index => " + str(self.raft_peer_state.peers_next_index[tuple(one_recv_json_message_dict["send_from"])]) + str(one_recv_json_message_dict),
+                             extra=self.my_detail)
                 with self.raft_peer_state.lock:
-                    if self.raft_peer_state.peers_next_index[tuple(one_recv_json_message_dict["send_from"])] >= 0:
+                    if self.raft_peer_state.peers_next_index[tuple(one_recv_json_message_dict["send_from"])] > 0:
                         self.raft_peer_state.peers_next_index[tuple(one_recv_json_message_dict["send_from"])] -= 1
                     #append_entries_leader = AppendEntriesLeader(self.raft_peer_state, one_recv_json_message_dict["send_from"], "append")
                     #self.json_message_send_queue.put(append_entries_leader.return_instance_vars_in_dict())
+
+            # match index can only increase, so we only record when it is true, it is always one less than nextIndex
+            # could be used to optimize finding right nextIndex? let's see later
             logger.debug(" finished process_append_entries_follower_reply " + str(one_recv_json_message_dict), extra=self.my_detail)
 
     def process_append_entries_leader(self, one_recv_json_message_dict):
@@ -259,12 +270,14 @@ class RaftPeer:
             if one_recv_json_message_dict["vote_granted"] == True:
                 self.raft_peer_state.increment_leader_majority_count()
                 # check if got majority vote or not
-                self.raft_peer_state.elected_leader(int(self.max_peer_number/2) + 1)
+                self.raft_peer_state.elected_leader(int(self.max_peer_number//2) + 1)
                 if self.raft_peer_state.peer_state == "leader":
                     logger.debug(" I am leader ", extra=self.my_detail)
                     # init nextIndex[] and matchIndex[]
+                    self.timeout_counter.reset_timeout()
                     self.raft_peer_state.initialize_peers_next_and_match_index(self.peers_addr_client_socket)
                     self.put_sent_to_all_peer_append_entries_heart_beat()
+
 
         # logger.debug(" finished process_request_vote_reply " + str(one_recv_json_message_dict), extra=self.my_detail)
         # logger.debug(" raft_peer_state \n " + str(self.raft_peer_state), extra=self.my_detail)
@@ -308,8 +321,8 @@ class RaftPeer:
                     self.connect_to_peer((str(one_peer_addr), int(one_peer_port)))
                     break
                 except Exception as e:
-                    logger.debug("raft peer connect to " + str(one_peer_addr, one_peer_port) + " failed retry, exception => " + str(e), extra=self.my_detail)
-                    time.sleep(0.01)
+                    logger.debug("raft peer connect to " + str((one_peer_addr, one_peer_port)) + " failed retry, exception => " + str(e), extra=self.my_detail)
+                    time.sleep(0.1)
         logger.debug("raft peer connect to all peers successful", extra=self.my_detail)
 
     def connect_to_peer(self, peer_addr_port_tuple):
@@ -368,8 +381,8 @@ class RaftPeer:
             log_len = len(self.raft_peer_state.state_log)
             for one_add_port_tuple in self.peers_addr_client_socket.keys():
                 # this peer is uptodate and we have no new entries just send empty heartbeat
-                if self.raft_peer_state.peers_next_index[one_add_port_tuple] == log_len - 1 or \
-                                self.raft_peer_state.peers_match_index == (log_len - 1):
+                if self.raft_peer_state.peers_next_index[one_add_port_tuple] == (log_len) or \
+                                self.raft_peer_state.peers_match_index == (log_len):
                     append_entries_heart_beat_leader = AppendEntriesLeader(self.raft_peer_state, one_add_port_tuple, "heartbeat").return_instance_vars_in_dict()
                 else:
                     append_entries_heart_beat_leader = AppendEntriesLeader(self.raft_peer_state, one_add_port_tuple, "append").return_instance_vars_in_dict()
@@ -382,6 +395,8 @@ class RaftPeer:
             for peer_addr in self.peers_addr_client_socket.keys():
                 self.send_to_peer(peer_addr, json_data_dict)
 
+
+    # only send as client for current peer not using listen socket to send
     def send_to_peer(self, peer_addr_port_tuple, json_data_dict):
         logger.debug(" sending json_data to " + str(peer_addr_port_tuple), extra = self.my_detail)
         # self._check_peer_in(peer_addr_port_tuple)
@@ -407,15 +422,23 @@ class RaftPeer:
             peer_socket.sendall(str.encode(serialized_json_data + "\n", "utf-8"))
         except Exception as e:
             # reconnect to peer
-            # not reconnecing client because they might change network
+            # no reconnecting to user socket, we use listen socket to send message to user
             if peer_addr_port_tuple in self.peers_addr_client_socket:
                 logger.debug(" json data serialization sent failed reconnect to peer " + str(json_data_dict) + str(e) + " " + str(
                     peer_addr_port_tuple), extra=self.my_detail)
-                self.connect_to_peer(peer_addr_port_tuple)
-                # put json back
-                self.json_message_send_queue.put(json_data_dict)
-            else:
-                logger.debug(" json data serialization sent failed  user abort" + str(json_data_dict) + str(e) + " " + str(peer_addr_port_tuple) , extra = self.my_detail)
+                # put json back to the end of queue
+                # self.json_message_send_queue.put(json_data_dict)
+                try:
+                    self.connect_to_peer(peer_addr_port_tuple)
+                    # if this message is still in current term then put it back to end of queu
+                    # if it is outdated remove it
+                    if json_data_dict["sender_term"] == self.raft_peer_state.current_term:
+                        self.json_message_send_queue.put(json_data_dict)
+                except Exception as e:
+                    logger.debug(" reconnection failed " + str(json_data_dict) + str(e) + " " + str(
+                            peer_addr_port_tuple), extra=self.my_detail)
+            # else:
+            #     logger.debug(" json data serialization sent failed  user abort " + str(peer_addr_port_tuple) , extra = self.my_detail)
 
 
     def receiv_from_all_peer(self):
@@ -439,6 +462,16 @@ class RaftPeer:
         #could be wrong if msg size bigger than 1024, need further testing
         while True:
             msg += peer_socket.recv(1024).decode("utf-8")
+            # remote closed recev will still return infinite empty string
+            if msg == "":
+                logger.debug(" one listen incoming socket closed " + str(peer_addr_port_tuple), extra=self.my_detail)
+                peer_socket.close()
+                if peer_addr_port_tuple in self.peers_addr_listen_socket:
+                    self.peers_addr_listen_socket.pop(peer_addr_port_tuple)
+                elif peer_addr_port_tuple in self.user_addr_listen_socket:
+                    self.user_addr_listen_socket.pop(peer_addr_port_tuple)
+
+                return
             if "\n" in msg:
                 msg_split_list = msg.split("\n")
                 msg = msg_split_list[-1]
