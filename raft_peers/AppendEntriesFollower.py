@@ -26,21 +26,27 @@ class AppendEntriesFollower:
 
     def process_append_entries(self):
 
-        # meet heartbeat append entries
-        if len(self.new_entries) == 0:
-            log_index_start = -1
-            log_index_end = -1
-        else:
-            log_index_start = self.new_entries[0]["log_index"]
-            log_index_end = self.new_entries[-1]["log_index"]
+        log_index_start = -1
+        log_index_end = -1
 
         result = {"log_index_start": log_index_start,
                   "log_index_end": log_index_end,
                   "send_from": list(self.raft_peer_state.my_addr_port_tuple),
                   "send_to": list(self.send_from),
-                  "sender_term":self.raft_peer_state.current_term,
+                  "sender_term": self.raft_peer_state.current_term,
                   "append_entries_result": True,
                   "msg_type": "append_entries_follower_reply"}
+
+        # meet heartbeat append entries
+        if len(self.new_entries) == 0:
+            return result
+
+        else:
+            log_index_start = self.new_entries[0]["log_index"]
+            log_index_end = self.new_entries[-1]["log_index"]
+            result["log_index_start"] = log_index_start
+            result["log_index_end"] = log_index_end
+
 
         # #reply false if this.follower's term > leader's term
         if self.raft_peer_state.current_term > self.leader_term:
@@ -50,12 +56,15 @@ class AppendEntriesFollower:
         #reply false if this.follower's does not have this prev_index, and term does not match
         #so even the follower has more log we only check the prev_index one?
 
-        if (len(self.raft_peer_state.state_log) - 1) < self.prev_log_index:
-            result["append_entries_result"] = False
-            return result
+
 
         #leader's prev log term does not match with follower's last entry's term
         if self.prev_log_index != -1:
+            # prevent peer restart get into this if and get false back
+            if (len(self.raft_peer_state.state_log) - 1) < self.prev_log_index:
+                result["append_entries_result"] = False
+                return result
+
             if (self.raft_peer_state.state_log[self.prev_log_index].log_term != self.prev_log_term):
                 result["append_entries_result"] = False
                 return result

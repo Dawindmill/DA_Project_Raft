@@ -200,18 +200,30 @@ class RaftPeer:
 
             # heart beat if reply is true, and log start = -1, log end = -1
 
-            if log_index_start != -1 and log_index_end != -1:
+            if one_recv_json_message_dict["append_entries_result"] == True:
                 #print(" log_index_start " + str(log_index_start) + " log_index_end " + str(log_index_end))
 
                 for one_log in self.raft_peer_state.state_log[log_index_start:(log_index_end + 1)]:
                     one_log.majority_count += 1
                     if one_log.check_over_majority((self.max_peer_number//2)+1):
                         with self.raft_peer_state.remote_var.lock:
+
+                            self.raft_peer_state.commit_index = one_log.log_index
+                            self.raft_peer_state.last_apply = self.raft_peer_state.commit_index
+
                             if one_log.log_applied == False:
-                                self.raft_peer_state.remote_var.perform_action(one_log.request_command_action_list)
-                                one_log.log_applied = True
-                                self.raft_peer_state.commit_index += 1
-                                self.raft_peer_satat.last_apply = self.raft_peer_state.commit_index
+
+                                # make sure all log before it is applied
+                                for i in range(self.raft_peer_state.commit_index + 1):
+                                    one_temp_log = self.raft_peer_state.state_log[i]
+                                    if one_temp_log.log_applied == False:
+                                        self.raft_peer_state.remote_var.perform_action(one_temp_log.request_command_action_list)
+                                        one_temp_log.log_applied = True
+
+
+                                # self.raft_peer_state.remote_var.perform_action(one_log.request_command_action_list)
+                                # one_log.log_applied = True
+
                                 # means user was originally connected to this user
                                 # but if received this json means user is in here
                                 if one_log.request_user_addr_port_tuple != None:
@@ -223,13 +235,11 @@ class RaftPeer:
                                     " leader update log " + str(self.raft_peer_state),
                                     extra=self.my_detail)
 
-
-
             else:
                 logger.debug(" starting process_append_entries_follower_reply False" + str(one_recv_json_message_dict),
                              extra=self.my_detail)
                 with self.raft_peer_state.lock:
-                    if self.raft_peer_state.peers_next_index[tuple(one_recv_json_message_dict["send_from"])] >= 0:
+                    if self.raft_peer_state.peers_next_index[tuple(one_recv_json_message_dict["send_from"])] > 0:
                         self.raft_peer_state.peers_next_index[tuple(one_recv_json_message_dict["send_from"])] -= 1
                     #append_entries_leader = AppendEntriesLeader(self.raft_peer_state, one_recv_json_message_dict["send_from"], "append")
                     #self.json_message_send_queue.put(append_entries_leader.return_instance_vars_in_dict())
