@@ -205,12 +205,13 @@ class RaftPeer:
 
                 for one_log in self.raft_peer_state.state_log[log_index_start:(log_index_end + 1)]:
                     one_log.majority_count += 1
-                    if one_log.check_over_majority((self.max_peer_number/2)+1):
+                    if one_log.check_over_majority((self.max_peer_number//2)+1):
                         with self.raft_peer_state.remote_var.lock:
                             if one_log.log_applied == False:
                                 self.raft_peer_state.remote_var.perform_action(one_log.request_command_action_list)
                                 one_log.log_applied = True
                                 self.raft_peer_state.commit_index += 1
+                                self.raft_peer_satat.last_apply = self.raft_peer_state.commit_index
                                 # means user was originally connected to this user
                                 # but if received this json means user is in here
                                 if one_log.request_user_addr_port_tuple != None:
@@ -221,6 +222,7 @@ class RaftPeer:
                                 logger.debug(
                                     " leader update log " + str(self.raft_peer_state),
                                     extra=self.my_detail)
+
 
 
             else:
@@ -367,8 +369,8 @@ class RaftPeer:
             log_len = len(self.raft_peer_state.state_log)
             for one_add_port_tuple in self.peers_addr_client_socket.keys():
                 # this peer is uptodate and we have no new entries just send empty heartbeat
-                if self.raft_peer_state.peers_next_index[one_add_port_tuple] == log_len - 1 or \
-                                self.raft_peer_state.peers_match_index == (log_len - 1):
+                if self.raft_peer_state.peers_next_index[one_add_port_tuple] == (log_len) or \
+                                self.raft_peer_state.peers_match_index == (log_len):
                     append_entries_heart_beat_leader = AppendEntriesLeader(self.raft_peer_state, one_add_port_tuple, "heartbeat").return_instance_vars_in_dict()
                 else:
                     append_entries_heart_beat_leader = AppendEntriesLeader(self.raft_peer_state, one_add_port_tuple, "append").return_instance_vars_in_dict()
@@ -410,9 +412,13 @@ class RaftPeer:
             if peer_addr_port_tuple in self.peers_addr_client_socket:
                 logger.debug(" json data serialization sent failed reconnect to peer " + str(json_data_dict) + str(e) + " " + str(
                     peer_addr_port_tuple), extra=self.my_detail)
-                self.connect_to_peer(peer_addr_port_tuple)
-                # put json back
-                self.json_message_send_queue.put(json_data_dict)
+                # put json back to the end of queue
+                # self.json_message_send_queue.put(json_data_dict)
+                try:
+                    self.connect_to_peer(peer_addr_port_tuple)
+                except Exception as e:
+                    logger.debug(" reconnection failed " + str(json_data_dict) + str(e) + " " + str(
+                            peer_addr_port_tuple), extra=self.my_detail)
             else:
                 logger.debug(" json data serialization sent failed  user abort" + str(json_data_dict) + str(e) + " " + str(peer_addr_port_tuple) , extra = self.my_detail)
 

@@ -20,6 +20,7 @@ class RequestVoteReceive:
                                "send_from": list(self.raft_peer_state.my_addr_port_tuple),
                                "sender_term": self.raft_peer_state.current_term,
                                "vote_granted": True}
+
         if self.raft_peer_state.peer_state == "leader":
             request_vote_result["vote_granted"] = False
             return request_vote_result
@@ -36,9 +37,9 @@ class RequestVoteReceive:
             request_vote_result["vote_granted"] = False
             return request_vote_result
 
-        if self.raft_peer_state.vote_for != None:
-            request_vote_result["vote_granted"] = False
-            return request_vote_result
+        # if self.raft_peer_state.vote_for != None:
+        #     request_vote_result["vote_granted"] = False
+        #     return request_vote_result
 
         # commit index not used in raft paper
         #if self.raft_peer_state.commit_index >

@@ -34,8 +34,8 @@ class RaftPeerState:
     def initialize_peers_next_and_match_index(self, peers_addr_port_tuple_list):
         next_index = len(self.state_log)
         # leader has nothing in log
-        if next_index == 0:
-            next_index = -1
+        # if next_index == 0:
+        #     next_index = -1
         self.peers_next_index = {peer_addr_port_tuple:next_index for peer_addr_port_tuple in peers_addr_port_tuple_list}
         self.peers_match_index = {peer_addr_port_tuple:-1 for peer_addr_port_tuple in peers_addr_port_tuple_list}
     def increment_leader_majority_count(self):

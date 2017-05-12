@@ -97,6 +97,7 @@ class AppendEntriesFollower:
                 self.raft_peer_state.remote_var.perform_action(one_log_data.request_command_action_list)
                 one_log_data.log_applied = True
         self.raft_peer_state.last_apply = commit_index
+        self.commit_index = commit_index
 
     def __str__(self):
         return str(vars(self))

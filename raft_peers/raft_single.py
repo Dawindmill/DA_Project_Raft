@@ -28,7 +28,7 @@ if __name__ == '__main__':
         listen_port = int(parser[cur_peer_name]["raft_peer_listen_port"])
 
         # port use to listen connection from user.py
-        client_port = int(parser[cur_peer_name]["raft_peer_user_port"])
+        user_listen_port = int(parser[cur_peer_name]["raft_peer_user_listen_port"])
     except Exception as e:
         sys.exit(str(e) + " Please check the format of raft_peer.ini file, it should contain raft_peer_listen_port and raft_peer_client_port")
 
@@ -36,7 +36,7 @@ if __name__ == '__main__':
     logging.basicConfig(format=FORMAT, level=logging.DEBUG, filename= ("logs/" + cur_peer_name+"_raft_log_file"), filemode="w")
 
     print ("host_ip => " + host_ip)
-    peer1_raft = RaftPeer(host_ip, listen_port, client_port, cur_peer_name, total_peer_num)
+    peer1_raft = RaftPeer(host_ip, listen_port, user_listen_port, cur_peer_name, total_peer_num)
 
     peer_addr_port_tuple_list = []
 
