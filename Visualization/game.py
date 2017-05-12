@@ -81,9 +81,9 @@ def start_game(screen, font, villager_images, monster_image, skills, clock, vill
                     one_skill_from_villager.skill_handler(one_villager, villagers, monsters, player)
                 one_villager.render_attack(screen)
 
-        for one_monster in monsters:
+        '''for one_monster in monsters:
             if not one_monster.dead:
-                one_monster.render_attack(screen)
+                one_monster.render_attack(screen)'''
 
         for one_skill in skills.values():
             one_skill.render(screen)
@@ -91,11 +91,20 @@ def start_game(screen, font, villager_images, monster_image, skills, clock, vill
         if day_countdown <= 0:
             day_countdown = Constant.ONE_DAY
         elif day_countdown <= Constant.NIGHT_TIME:
+            if day_countdown == Constant.NIGHT_TIME:
+                alive_villagers_list = [one_villager for one_villager in villagers if not one_villager.dead]
+                for monster in monsters:
+                    if not monster.dead:
+                        monster.night_event.perform_event(alive_villagers_list)
 
-            for one_monster in monsters:
+            '''for one_monster in monsters:
                 villagers_not_dead = [one_villager for one_villager in villagers if not one_villager.dead]
                 one_monster.attack_villager_or_not(villagers_not_dead, True)
-                # one_monster.render(screen)
+                # one_monster.render(screen)'''
+
+            for monster in monsters:
+                if not monster.dead:
+                    monster.night_event.render_event(screen)
 
             # inspired from http://stackoverflow.com/questions/6339057/draw-a-transparent-rectangle-in-pygame
             s = pygame.Surface((Constant.SCREEN_WIDTH, Constant.SCREEN_HEIGHT))  # the size of your rect
@@ -163,14 +172,13 @@ def main():
     monster_image = pygame.image.load(Constant.MONSTER_IMAGE)
     clock = pygame.time.Clock()
     villager_connections = []
-    night_event = NightEvent()
-    night_event.getEvent()
+
     # listener = ConnectionListener(villager_connections)
     # listener.start()
     index = 0
     for skill_name, skill_image in skill_images.items():
         # discard the suffix
-        skills[skill_name.split(".")[0]] = Skill(skill_name, skill_image,50 + index * ((skill_image.get_rect().size)[0] * Constant.SKILL_IMAGE_SCALE), Constant.SCREEN_HEIGHT - 50, Constant.SKILL_IMAGE_SCALE,True)
+        skills[skill_name.split(".")[0]] = Skill(skill_name, skill_image, Constant.SCREEN_WIDTH - (((skill_image.get_rect().size)[0] * Constant.SKILL_IMAGE_SCALE)/2), 50 + index * ((skill_image.get_rect().size)[0] * Constant.SKILL_IMAGE_SCALE), Constant.SKILL_IMAGE_SCALE,True)
         index += 1
     player = Player(player_image, Constant.SAGE_POSITION[0], Constant.SAGE_POSITION[1])
     start_game(screen, font, villager_images, monster_image, skills, clock, villager_connections, player)

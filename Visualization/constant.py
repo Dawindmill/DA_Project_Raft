@@ -55,7 +55,7 @@ class Constant:
 
     LAND_SIZE = 4
 
-    SKILL_IMAGES = ['./assets/skill_icons/'+str(f) for f in os.listdir('./assets/skill_icons') if f.endswith('.png')]
+    SKILL_IMAGES = ['./assets/skill_icons/using/'+str(f) for f in os.listdir('./assets/skill_icons/using') if f.endswith('.png')]
     VILLAGER_IMAGES = ["assets/villager_m.png", "assets/villager_f.png"]
     VILLAGER_MAX_HP = 2.0
     MONSTER_IMAGE = "assets/monster.png"
@@ -118,4 +118,13 @@ class Constant:
     DEBUG = True
 
     HEAL_BAR_HEIGHT = 5
-    day_countdown = ONE_DAY
+
+    MONSTER = "monster"
+    VILLAGER = "villager"
+
+    ATTACK = "attack"
+    GIVE_BIRTH = "give_birth"
+    NOTHING = "nothing"
+
+    EVENTS = {MONSTER: [ATTACK],#, NOTHING],
+              VILLAGER: [GIVE_BIRTH, NOTHING]}
