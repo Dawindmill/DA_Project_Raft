@@ -8,7 +8,7 @@ from skill import Skill
 import json
 import pygame
 from land import Land
-from attack import Attack
+from attack import AttackAnimation
 from house import House
 from item import Item
 from constant_image import ConstantImage
@@ -94,7 +94,7 @@ class Villager(Image, threading.Thread):
         temp_item = Item(image, temp_item_center_x, temp_item_center_y, item_name, image_scale)
         self.item.append(temp_item)
 
-    def set_attack(self, hp_decrement):
+    def being_attacked(self, hp_decrement):
         # self.attacked = True
         # self.attack_display_count_down = self.attack_display_count_down_const
         self.current_health_down_with_amount(hp_decrement)
@@ -171,7 +171,7 @@ class Villager(Image, threading.Thread):
 
         if self.attacked and self.attack_power > 0 :
             monster.set_attack(self.attack_power)
-            self.attack = Attack(ConstantImage.VILLAGER_ATTACK_IMAGE_SPRITE, monster.x, monster.y, Constant.VILLAGER_ATTACK_IMAGE_SCALE)
+            self.attack = AttackAnimation(ConstantImage.VILLAGER_ATTACK_IMAGE_SPRITE, monster.x, monster.y, Constant.VILLAGER_ATTACK_IMAGE_SCALE)
             self.attack_display_count_down = self.attack_display_count_down_const
 
         else:
