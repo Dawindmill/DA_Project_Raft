@@ -32,11 +32,18 @@ class RaftPeer:
 
     def __init__(self, host, port, user_port, peer_id, max_peer_number):
 
+        self.visualizaiton_on = False
+        self.visualization_scoket = None
+        self.visualization_listen_thread = None
+        self.visualization_addr_port_tuple = None
+
         self.peer_addr_port_tuple_list = []
 
         self.max_peer_number = max_peer_number
+        # this is host ip and listening port for this peer
         self.my_addr_port_tuple = (host, port)
         self.peer_id = peer_id
+        # this port is peer's listening port
         self.my_detail = {"host":str(host), "port":str(port), "peer_id":str(peer_id)}
         logger.debug(" init raft peer " + str(host) + " " + str(port), extra = self.my_detail)
         #use to listen or recv message from other peers
@@ -102,6 +109,29 @@ class RaftPeer:
 
         except Exception as e:
             logger.debug( "Error: unable to start processing threads " + str(e), extra = self.my_detail)
+
+    def start_visualization_connection_thread(self, visualizaiton_ip, visualization_port):
+        self.visualizaiton_on = True
+        self.visualization_scoket = socket.socket()
+        self.visualization_addr_port_tuple = (str(visualizaiton_ip), int(visualization_port))
+        self.visualization_scoket.connect(self.visualization_addr_port_tuple)
+        self.visualization_listen_thread = threading.Thread(target=self.receive_from_one_peer_newline_delimiter,
+                                       args=(self.visualization_addr_port_tuple,))
+        self.visualization_listen_thread.daemon = True
+        self.visualization_listen_thread.start()
+
+        cur_peer_info_json = {
+            "msg_type":"information",
+            "send_to":list(self.visualization_addr_port_tuple),
+            "send_from":list(self.raft_peer_state.my_addr_port_tuple),
+            "peer_id":self.my_detail["peer_id"]
+        }
+
+        self.json_message_send_queue.put(cur_peer_info_json)
+
+        print ("visusalization server connection established")
+
+
 
     def start_raft_peer(self):
         self.thread_timer = threading.Thread(target=self.timeout_counter.start_time_counter,args=(self,))
@@ -436,6 +466,11 @@ class RaftPeer:
             except Exception as e:
                 logger.debug(" not this user socket abort " , extra = self.my_detail)
                 return
+        elif peer_addr_port_tuple == self.visualization_addr_port_tuple:
+            peer_socket = self.visualization_scoket
+            if peer_socket is None:
+                print ("visualization send failed, the socket is none")
+                return;
         else:
             try:
                 peer_socket = self.peers_addr_client_socket[peer_addr_port_tuple]
@@ -496,6 +531,8 @@ class RaftPeer:
             peer_socket = self.peers_addr_listen_socket[peer_addr_port_tuple]
         elif peer_addr_port_tuple in self.user_addr_listen_socket:
             peer_socket = self.user_addr_listen_socket[peer_addr_port_tuple]
+        elif peer_addr_port_tuple == self.visualization_addr_port_tuple:
+            peer_socket = self.visualization_scoket
         else:
             logger.debug(" can't find this addr_port_tuple in either dicts " , extra=self.my_detail)
 

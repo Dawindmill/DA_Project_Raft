@@ -61,11 +61,11 @@ if __name__ == '__main__':
 
     if command_line_args.visualization:
         try:
-            visual_host_ip = config_parser["visualization_host_ip"]["visualization_listen_port"]
+            visual_host_ip = config_parser["visualization"]["visualization_host_ip"]
             visual_host_port = config_parser["visualization"]["visualization_listen_port"]
         except Exception as e:
             print ("visualization visualization_host_ip/visualization_listen_port not present")
-        # peer1_raft.start_visualization_connection_thread(visual_host_ip, visual_host_port)
+        peer1_raft.start_visualization_connection_thread(str(visual_host_ip), int(visual_host_port))
 
     peer1_raft.start_connect_to_all_peer_thread(peer_addr_port_tuple_list)
     peer1_raft.start_raft_peer()
