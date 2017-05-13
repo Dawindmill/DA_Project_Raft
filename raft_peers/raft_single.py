@@ -46,7 +46,7 @@ if __name__ == '__main__':
         other_peer_listen_port = int(parser["peer"+str(i + 1)]["raft_peer_listen_port"])
         peer_addr_port_tuple_list.append((other_peer_host_ip, other_peer_listen_port))
 
-    peer1_raft.connect_to_all_peer(peer_addr_port_tuple_list)
+    peer1_raft.start_connect_to_all_peer_thread(peer_addr_port_tuple_list)
     peer1_raft.start_raft_peer()
 
     while True:

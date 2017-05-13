@@ -32,6 +32,8 @@ class RaftPeer:
 
     def __init__(self, host, port, user_port, peer_id, max_peer_number):
 
+        self.peer_addr_port_tuple_list = []
+
         self.max_peer_number = max_peer_number
         self.my_addr_port_tuple = (host, port)
         self.peer_id = peer_id
@@ -73,6 +75,8 @@ class RaftPeer:
         logger.debug(" random_timeout =>  " + str(random_timeout), extra=self.my_detail)
         self.timeout_counter =TimeoutCounter(random_timeout, self.my_addr_port_tuple, self.peer_id, self.raft_peer_state)
         try:
+
+            self.thread_connect_to_all = None
 
             self.thread_send = threading.Thread(target=self.process_json_message_send_queue, args=())
             self.thread_send.daemon=True
@@ -182,24 +186,29 @@ class RaftPeer:
         logger.debug(" starting process_append_entries_follower_reply " + str(one_recv_json_message_dict), extra=self.my_detail)
         log_index_start = int(one_recv_json_message_dict["log_index_start"])
         log_index_end = int(one_recv_json_message_dict["log_index_end"])
-        if one_recv_json_message_dict["append_entries_result"] == True:
-            logger.debug(" starting process_append_entries_follower_reply True" + str(one_recv_json_message_dict),
-                         extra=self.my_detail)
-        if one_recv_json_message_dict["log_index_start"] == -1 and one_recv_json_message_dict["log_index_end"] == -1:
-            logger.debug(" starting process_append_entries_follower_reply 'heart beat' True" + str(one_recv_json_message_dict),
-                         extra=self.my_detail)
-            return
+
+        # if one_recv_json_message_dict["append_entries_result"] == True:
+        #     logger.debug(" starting process_append_entries_follower_reply True" + str(one_recv_json_message_dict),
+        #                  extra=self.my_detail)
+        # if one_recv_json_message_dict["log_index_start"] == -1 and one_recv_json_message_dict["log_index_end"] == -1:
+        #     logger.debug(" starting process_append_entries_follower_reply 'heart beat' True" + str(one_recv_json_message_dict),
+        #                  extra=self.my_detail)
+        #     if one_recv_json_message_dict["append_entries_result"] == False:
+        #
+        #
+        #
+        #     return
 
         with self.raft_peer_state.lock:
             # heart beat if reply is true, and log start = -1, log end = -1
             if one_recv_json_message_dict["append_entries_result"] == True:
                 # increase this peer's next index
-                self.raft_peer_state.peers_next_index[tuple(one_recv_json_message_dict["send_from"])] += 1
                 self.raft_peer_state.peers_match_index[tuple(one_recv_json_message_dict["send_from"])] = self.raft_peer_state.peers_next_index[tuple(one_recv_json_message_dict["send_from"])]
 
                 #print(" log_index_start " + str(log_index_start) + " log_index_end " + str(log_index_end))
 
                 for one_log in self.raft_peer_state.state_log[log_index_start:(log_index_end + 1)]:
+                    self.raft_peer_state.peers_next_index[tuple(one_recv_json_message_dict["send_from"])] += 1
                     one_log.majority_count += 1
                     if one_log.check_over_majority((self.max_peer_number//2)+1):
                         with self.raft_peer_state.remote_var.lock:
@@ -306,24 +315,41 @@ class RaftPeer:
             peer_addr, peer_port = one_json_data_dict["send_to"]
             self.send_to_peer((peer_addr, peer_port), one_json_data_dict)
 
+    def start_connect_to_all_peer_thread(self, peer_addr_port_tuple_list):
+        self.thread_connect_to_all = threading.Thread(target=self.connect_to_all_peer, args=(peer_addr_port_tuple_list,))
+        self.thread_connect_to_all.daemon = True
+        self.thread_connect_to_all.start()
+        logger.debug(" start thread => connect to all thread ", extra=self.my_detail)
+
 
     # [(ip => str, port => int)...]
     def connect_to_all_peer(self, peer_addr_port_tuple_list):
+        self.peer_addr_port_tuple_list = peer_addr_port_tuple_list
         my_peer_addr_port_tuple = (str(self.my_detail['host']), int(self.my_detail['port']))
+        self.peer_addr_port_tuple_list.remove(my_peer_addr_port_tuple)
         # in referece remove
         # peer_addr_port_tuple_list.remove(my_peer_addr_port_tuple)
-
-        for one_peer_addr, one_peer_port in peer_addr_port_tuple_list:
-            if my_peer_addr_port_tuple == (str(one_peer_addr), int(one_peer_port)):
+        # for one_peer_addr, one_peer_port in peer_addr_port_tuple_list:
+        count = -1
+        while True:
+            count += 1
+            if len(self.peer_addr_port_tuple_list) > 0:
+                one_peer_addr, one_peer_port = peer_addr_port_tuple_list[count%len(self.peer_addr_port_tuple_list)]
+            else:
+                #print("self")
+                time.sleep(0.1)
                 continue
-            while True:
-                try:
-                    self.connect_to_peer((str(one_peer_addr), int(one_peer_port)))
-                    break
-                except Exception as e:
-                    logger.debug("raft peer connect to " + str((one_peer_addr, one_peer_port)) + " failed retry, exception => " + str(e), extra=self.my_detail)
-                    time.sleep(0.1)
-        logger.debug("raft peer connect to all peers successful", extra=self.my_detail)
+            # while True:
+            try:
+                self.connect_to_peer((str(one_peer_addr), int(one_peer_port)))
+                peer_addr_port_tuple_list.remove((one_peer_addr,one_peer_port))
+                print("finished connect to " + str((str(one_peer_addr), int(one_peer_port))))
+            except Exception as e:
+                print("failed connect to " + str((str(one_peer_addr), int(one_peer_port))))
+                # logger.debug("raft peer connect to " + str((one_peer_addr, one_peer_port)) + " failed retry, exception => " + str(e), extra=self.my_detail)
+                time.sleep(0.1)
+                continue
+            time.sleep(0.1)
 
     def connect_to_peer(self, peer_addr_port_tuple):
         # use to send message to other peers
@@ -402,11 +428,23 @@ class RaftPeer:
         # self._check_peer_in(peer_addr_port_tuple)
         #logger.debug(" sending json_data to " + str(self.peers_addr_client_socket), extra=self.my_detail)
 
+
         # sent to user
         if json_data_dict["msg_type"] in ["request_command_reply"]:
-            peer_socket = self.user_addr_listen_socket[peer_addr_port_tuple]
+            try:
+                peer_socket = self.user_addr_listen_socket[peer_addr_port_tuple]
+            except Exception as e:
+                logger.debug(" not this user socket abort " , extra = self.my_detail)
+                return
         else:
-            peer_socket = self.peers_addr_client_socket[peer_addr_port_tuple]
+            try:
+                peer_socket = self.peers_addr_client_socket[peer_addr_port_tuple]
+            except Exception as e:
+                logger.debug(" peer not connected as client yet, put this term message back" , extra = self.my_detail)
+                # if json_data_dict["sender_term"] == self.raft_peer_state.current_term:
+                #     self.json_message_send_queue.put(json_data_dict)
+                return
+
         try:
             #serialized_json_data = json.dumps(json.loads(jsonpickle.encode(json_data_dict)))
             serialized_json_data = jsonpickle.encode(json_data_dict)
@@ -429,11 +467,14 @@ class RaftPeer:
                 # put json back to the end of queue
                 # self.json_message_send_queue.put(json_data_dict)
                 try:
-                    self.connect_to_peer(peer_addr_port_tuple)
+                    # put it back for thread to reconnect it
+                    # python list append is thread-safe
+                    self.peer_addr_port_tuple_list.append(peer_addr_port_tuple)
+                    # self.connect_to_peer(peer_addr_port_tuple)
                     # if this message is still in current term then put it back to end of queu
                     # if it is outdated remove it
-                    if json_data_dict["sender_term"] == self.raft_peer_state.current_term:
-                        self.json_message_send_queue.put(json_data_dict)
+                    # if json_data_dict["sender_term"] == self.raft_peer_state.current_term:
+                        # self.json_message_send_queue.put(json_data_dict)
                 except Exception as e:
                     logger.debug(" reconnection failed " + str(json_data_dict) + str(e) + " " + str(
                             peer_addr_port_tuple), extra=self.my_detail)
@@ -461,17 +502,20 @@ class RaftPeer:
         msg = ""
         #could be wrong if msg size bigger than 1024, need further testing
         while True:
-            msg += peer_socket.recv(1024).decode("utf-8")
-            # remote closed recev will still return infinite empty string
-            if msg == "":
-                logger.debug(" one listen incoming socket closed " + str(peer_addr_port_tuple), extra=self.my_detail)
-                peer_socket.close()
+
+            try:
+                msg += peer_socket.recv(1024).decode("utf-8")
+                # remote closed recev will still return infinite empty string
+            except Exception as e:
+                logger.debug(" one listen incoming socket closed " + str(e) + str(peer_addr_port_tuple), extra=self.my_detail)
+                # called this will terminate accept?
+                # peer_socket.close()
                 if peer_addr_port_tuple in self.peers_addr_listen_socket:
                     self.peers_addr_listen_socket.pop(peer_addr_port_tuple)
                 elif peer_addr_port_tuple in self.user_addr_listen_socket:
                     self.user_addr_listen_socket.pop(peer_addr_port_tuple)
-
                 return
+
             if "\n" in msg:
                 msg_split_list = msg.split("\n")
                 msg = msg_split_list[-1]
@@ -483,43 +527,3 @@ class RaftPeer:
                         logger.debug(" put one json_data " + one_json_msg, extra = self.my_detail)
                     except Exception as e:
                         logger.debug( " deserialization recv json data failed " + str(e), extra = self.my_detail)
-
-    #this receiv need size first if want to use it change send_to_peer to send msg size first
-    # def receive_from_peer(self, peer_addr):
-    #     logger.debug(" recv json_data from " + str(peer_addr), extra = self.my_detail)
-    #     self._check_peer_in(peer_addr)
-    #     peer_socket = self.peers_addr_listen_socket[peer_addr]
-    #     msg_length = ""
-    #     one_byte = peer_socket.recv(1).decode("utf-8")
-    #     logger.debug(" recv json_data receive json_data len " + one_byte, extra = self.my_detail)
-    #
-    #     while one_byte != '\n':
-    #         logger.debug("loop recv json_data receive json_data len " + one_byte + " max_len => " + msg_length, extra = self.my_detail)
-    #         msg_length += one_byte
-    #         one_byte = peer_socket.recv(1).decode("utf-8")
-    #
-    #     logger.debug("finish recv json_data receive json_data len " + msg_length, extra = self.my_detail)
-    #
-    #     msg_length = int(msg_length)
-    #     view = memoryview(bytearray(msg_length))
-    #     next_offset = 0
-    #     while msg_length - next_offset > 0:
-    #         recv_size = peer_socket.recv_into(view[next_offset:], msg_length - next_offset)
-    #         next_offset += recv_size
-    #         logger.debug(" next_offset => " + str(next_offset), extra = self.my_detail)
-    #         logger.debug(" recv_size => " + str(recv_size), extra = self.my_detail)
-    #
-    #
-    #     try:
-    #         logger.debug(" view => " + str(view.tobytes()), extra = self.my_detail)
-    #         deserialized_json_data = json.loads(view.tobytes().decode("utf-8"))
-    #         logger.debug(" recv json_data from " + str(peer_addr) + " json_data => " + str(deserialized_json_data), extra = self.my_detail)
-    #         return deserialized_json_data
-    #     except Exception as e:
-    #         logger.debug( " deserialization recv json data failed " + str(e), extra = self.my_detail)
-    #     logger.debug( "  recv json data failed retrun None", extra = self.my_detail)
-    #     return None
-
-
-
-
