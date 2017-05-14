@@ -8,7 +8,7 @@ import time
 import threading
 class TimeoutCounter:
     #timeout -> in second
-    def __init__(self, time_out, owner_addr_port_tuple, peer_id, raft_peer_state):
+    def __init__(self, time_out, owner_addr_port_tuple, peer_id, raft_peer_state, append_entries_heart_beat_time_out):
         self.my_detial = {"host": str(owner_addr_port_tuple[0]),
                           "port": str(owner_addr_port_tuple[1]),
                           "peer_id": str(peer_id)}
@@ -19,7 +19,7 @@ class TimeoutCounter:
         self.sleep_time = 0.001
         # send heat beat in 10 ms
         # self.append_entries_heart_beat_time_out = 0.01
-        self.append_entries_heart_beat_time_out = 2
+        self.append_entries_heart_beat_time_out = append_entries_heart_beat_time_out
         self.raft_peer_state = raft_peer_state
 
     def start_time_out(self, time_out, action_func, timeout_type):

@@ -79,9 +79,14 @@ class RaftPeer:
         # random_timeout = random.randint(100, 150)/1000
         # set time as seed
         random.seed(time.time())
-        random_timeout = random.randint(10000, 15000) / 1000
-        logger.debug(" random_timeout =>  " + str(random_timeout), extra=self.my_detail)
-        self.timeout_counter =TimeoutCounter(random_timeout, self.my_addr_port_tuple, self.peer_id, self.raft_peer_state)
+        # seconds
+        # self.random_timeout = random.randint(10000, 15000) / 1000
+        # random betwee a second and b second inclusively, only keep result in 2 decimal places
+        self.random_timeout = float("{0:.2f}".format(random.uniform(10,15)))
+        logger.debug(" random_timeout =>  " + str(self.random_timeout) + " s", extra=self.my_detail)
+        # heart beat should be 5 times quicker than candidate timeoutm in here it is c seconds
+        self.append_entries_heart_beat_time_out = 2
+        self.timeout_counter =TimeoutCounter(self.random_timeout, self.my_addr_port_tuple, self.peer_id, self.raft_peer_state, self.append_entries_heart_beat_time_out)
         try:
 
             self.thread_connect_to_all = None
@@ -306,7 +311,23 @@ class RaftPeer:
             self.raft_peer_state.peer_state = "follower"
             self.raft_peer_state.vote_for = None
             append_entries_follower = AppendEntriesFollower(one_recv_json_message_dict, self.raft_peer_state)
-            self.json_message_send_queue.put(append_entries_follower.process_append_entries())
+
+            temp_processed_append_entries_result_json = append_entries_follower.process_append_entries()
+
+
+            if self.visualizaiton_on:
+                if temp_processed_append_entries_result_json["log_index_start"] != -1 and \
+                    temp_processed_append_entries_result_json["log_index_end"] and \
+                    temp_processed_append_entries_result_json["append_entries_result"] == True:
+                    # wait up to heat beat time to send out commit for visualization rendering purpose
+                    time.sleep(float("{0:.2f}".format(random.uniform(0, self.append_entries_heart_beat_time_out))))
+                    temp_processed_append_entries_result_json_deep_copy =  copy.deepcopy(temp_processed_append_entries_result_json)
+                    temp_processed_append_entries_result_json_deep_copy["send_to"] = list(self.visualization_addr_port_tuple)
+                    # note that leader append entries used the key 'leader_commit_index' which is different key used in here
+                    temp_processed_append_entries_result_json_deep_copy["sender_commit_index"] = self.raft_peer_state.current_term
+                    self.json_message_send_queue(temp_processed_append_entries_result_json_deep_copy)
+
+            self.json_message_send_queue.put(temp_processed_append_entries_result_json)
             logger.debug(" after append entries from leader => \n " + str(self.raft_peer_state),
                          extra=self.my_detail)
         logger.debug(" finished process_append_entries_leader " + str(one_recv_json_message_dict), extra=self.my_detail)
