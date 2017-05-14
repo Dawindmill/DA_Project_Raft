@@ -30,7 +30,7 @@ def start_game(screen, font, villager_images, monster_image, skills, clock, vill
     monsters.append(Monster(monster_image, Constant.MONSTER_POSITIONS[0][0], Constant.MONSTER_POSITIONS[0][1]))
     monsters.append(Monster(monster_image, Constant.MONSTER_POSITIONS[1][0], Constant.MONSTER_POSITIONS[1][1]))
 
-    next_villager_id = 1
+    #next_villager_id = 1
 
     global done
     done = False
@@ -54,36 +54,61 @@ def start_game(screen, font, villager_images, monster_image, skills, clock, vill
             debug_print(listener_list)
 
         for listener in listener_list:
-            debug_print("in game")
-            if listener.info_set:
-                debug_print("info set")
-                listener_list.remove(listener)
-                if listener.peer_id not in existing_peer_ids:
-                    existing_peer_ids.append(listener.peer_id)
-                    gender = random.randint(0, 10) % 2
-                    villager = Villager(villager_images[gender], Constant.VILLAGER_POSITIONS[villager_count],
-                                        next_villager_id, font, listener, current_leader)
-                    alive_villagers_list.append(villager)
+            if len(alive_villagers_list) < len(Constant.VILLAGER_POSITIONS):
+                #debug_print("in game")
+                if listener.info_set:
+                    debug_print("info set")
+                    listener_list.remove(listener)
+                    if listener.peer_id not in existing_peer_ids:
+                        existing_peer_ids.append(listener.peer_id)
+                        gender = random.randint(0, 10) % 2
+                        villager_id = int(listener.peer_id.split("_")[-1])
+                        if len(villagers) < len(Constant.VILLAGER_POSITIONS):
+                            position = Constant.VILLAGER_POSITIONS[len(villagers)]
+                            villager = Villager(villager_images[gender], position,
+                                                villager_id, font, listener, current_leader)
+                            villagers.append(villager)
+                        else:
+                            for i in range(len(villagers)):
+                                if not villagers[i]:
+                                    position = Constant.VILLAGER_POSITIONS[i]
+                                    villager = Villager(villager_images[gender], position,
+                                                        villager_id, font, listener, current_leader)
+                                    villagers[i] = villager
+                                    break
+                        alive_villagers_list.append(villager)
 
-                    # test setting skill
-                    villager.add_skill("animal", skills["animal"].image_sprite)
-                    villager.add_skill("armour", skills["armour"].image_sprite)
+                        # test setting skill
+                        villager.add_skill("animal", skills["animal"].image_sprite)
+                        villager.add_skill("armour", skills["armour"].image_sprite)
 
-                    # SET LEADER TO FIRST FEMALE FOR TESTING
-                    #if gender == 1:
-                    #    villager.set_leader_role(Role.LEADER)
-                    #else:
-                    #    villager.set_leader_role(Role.CANDIDATE)
-                    villagers.append(villager)
-                    # diable villager thread for game devs
-                    villager.start()
-                    villager_count += 1
-                    next_villager_id += 1
-                    debug_print(villagers)
+                        # SET LEADER TO FIRST FEMALE FOR TESTING
+                        #if gender == 1:
+                        #    villager.set_leader_role(Role.LEADER)
+                        #else:
+                        #    villager.set_leader_role(Role.CANDIDATE)
+                        #villagers.append(villager)
+                        # diable villager thread for game devs
+                        villager.start()
+                        villager_count += 1
+                        #next_villager_id += 1
+                        debug_print(villagers)
+            else:
+                break
+
         screen.fill(Constant.WHITE)
-        for one_villager in villagers:
-            if not one_villager.dead:
-                one_villager.render(screen)
+
+        for villager_index in range(len(villagers)):
+            villager = villagers[villager_index]
+            if villager:
+                if not villager.dead:
+                    villager.render(screen)
+                else:
+                    alive_villagers_list.remove(villager)
+                    existing_peer_ids.remove(villager.listener.peer_id)
+                    villager.listener.close_socket()
+                    villagers[villager_index] = None
+                    villager_count -= 1
         # find leader
 
         new_leader = player.find_leader(villagers)
@@ -116,7 +141,7 @@ def start_game(screen, font, villager_images, monster_image, skills, clock, vill
             day_countdown = Constant.ONE_DAY
         elif day_countdown <= Constant.NIGHT_TIME:
             if day_countdown == Constant.NIGHT_TIME:
-                alive_villagers_list = [one_villager for one_villager in villagers if not one_villager.dead]
+                #alive_villagers_list = [one_villager for one_villager in villagers if not one_villager.dead]
                 for monster in monsters:
                     if not monster.dead:
                         monster.night_event.perform_event(alive_villagers_list)

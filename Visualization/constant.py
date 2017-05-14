@@ -112,6 +112,7 @@ class Constant:
 
     AUTHORITY_MESSAGE = "I'm the leader!"
     CANDIDATE_MESSAGE = "I want to be the leader!"
+    VOTE_MESSAGE = "I vote for villager {}!"
 
     HOST_INDEX = 0
     PORT_INDEX = 1

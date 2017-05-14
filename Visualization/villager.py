@@ -129,6 +129,8 @@ class Villager(Image, threading.Thread):
                     self.set_leadership(request)
                 elif request_type == Constant.REQUEST_VOTE:
                     self.set_candidate(request)
+                elif request_type == Constant.REQUEST_VOTE_REPLY:
+                    self.vote(request)
                 elif request_type == Constant.APPEND_REPLY:
                     self.learned_skill(request)
             if self.current_health == 0:
@@ -159,6 +161,10 @@ class Villager(Image, threading.Thread):
             return
         self.role = Role.CANDIDATE
         self.set_message(Constant.CANDIDATE_MESSAGE)
+
+    def vote(self, request):
+        vote_for = request[Constant.PEER_ID][-1]
+        self.set_message(Constant.VOTE_MESSAGE.format(vote_for))
 
 
     def learned_skill(self, request):

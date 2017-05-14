@@ -61,7 +61,8 @@ class VillagerListener(threading.Thread):
                 print(self.peer_id + " connection aborted")
                 self.wait()
 
-
+    def close_socket(self):
+        self.socket.close()
 
             #debug_print("message list: ")
             #debug_print(self.messages)
