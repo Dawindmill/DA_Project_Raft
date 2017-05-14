@@ -15,6 +15,7 @@ from AppendEntriesLeader import  AppendEntriesLeader
 from RemoteVar import  RemoteVar
 import time
 import threading
+import copy
 
 '''
 Author: Bingfeng Liu
@@ -191,11 +192,21 @@ class RaftPeer:
         with self.raft_peer_state.lock:
             # if command_request == [] means init finding leader
             if self.raft_peer_state.peer_state == "leader":
+
+                if self.visualizaiton_on:
+                    one_recv_json_message_type_deep_copy = copy.deepcopy(one_recv_json_message_type)
+                    one_recv_json_message_type_deep_copy["msg_type"] = "request_command_ack"
+                    one_recv_json_message_type_deep_copy["send_from"] = list(self.raft_peer_state.my_addr_port_tuple)
+                    one_recv_json_message_type_deep_copy["send_to"] = list(self.visualization_addr_port_tuple)
+                    one_recv_json_message_type_deep_copy["sender_term"] = self.raft_peer_state.current_term
+                    self.raft_peer_state.state_log.append(one_recv_json_message_type_deep_copy )
+
                 if one_recv_json_message_type["request_command_list"] == []:
                     self.json_message_send_queue.put({"msg_type":"request_command_reply",
                                                       "command_result": "is_leader",
                                                       "send_from": list(self.user_socket.getsockname()),
-                                                      "send_to": list(one_recv_json_message_type["send_from"])})
+                                                      "send_to": list(one_recv_json_message_type["send_from"]),
+                                                      "sender_term": self.raft_peer_state.current_term})
                     return
                 temp_log = LogData(len(self.raft_peer_state.state_log),
                                    self.raft_peer_state.current_term,
@@ -209,7 +220,8 @@ class RaftPeer:
                 self.json_message_send_queue.put({"msg_type":"request_command_reply",
                                                   "command_result": "not_leader",
                                                   "send_from": self.user_socket.getsockname(),
-                                                  "send_to":list(one_recv_json_message_type["send_from"]) })
+                                                  "send_to":list(one_recv_json_message_type["send_from"]),
+                                                  "sender_term":self.raft_peer_state.current_term})
 
     def process_append_entries_follower_reply(self, one_recv_json_message_dict):
         # print (str(one_recv_json_message_dict))
@@ -265,7 +277,8 @@ class RaftPeer:
                                     self.json_message_send_queue.put({"msg_type": "request_command_reply",
                                                                       "send_from":list(self.my_addr_port_tuple),
                                                                       "send_to":list(one_log.request_user_addr_port_tuple),
-                                                                      "command_result": self.raft_peer_state.remote_var.vars[one_log.request_command_action_list[0]]})
+                                                                      "command_result": self.raft_peer_state.remote_var.vars[one_log.request_command_action_list[0]],
+                                                                      "sender_term":self.raft_peer_state.current_term})
                                 logger.debug(
                                     " leader update log " + str(self.raft_peer_state),
                                     extra=self.my_detail)
@@ -311,6 +324,17 @@ class RaftPeer:
                 # check if got majority vote or not
                 self.raft_peer_state.elected_leader(int(self.max_peer_number//2) + 1)
                 if self.raft_peer_state.peer_state == "leader":
+
+                    if self.visualizaiton_on:
+                        leadership_json = {
+                            "msg_type":"leadershipt",
+                            "sender_term":self.raft_peer_state.current_term,
+                            "send_from":self.raft_peer_state.my_addr_port_tuple,
+                            "send_to":list(self.visualization_addr_port_tuple),
+                            "peer_id":self.raft_peer_state.peer_id
+                        }
+                        self.json_message_send_queue.put(leadership_json)
+
                     logger.debug(" I am leader ", extra=self.my_detail)
                     # init nextIndex[] and matchIndex[]
                     self.timeout_counter.reset_timeout()
@@ -334,6 +358,12 @@ class RaftPeer:
             temp_request_vote_result = request_vote_receive.process_request_vote()
             if temp_request_vote_result["vote_granted"] == True:
                 self.timeout_counter.reset_timeout()
+
+            if self.visualizaiton_on:
+                temp_request_vote_result_deep_copy = copy.deepcopy(temp_request_vote_result)
+                temp_request_vote_result_deep_copy["send_to"] = list(self.visualization_addr_port_tuple)
+                self.json_message_send_queue.put(temp_request_vote_result)
+
             self.json_message_send_queue.put(temp_request_vote_result)
         logger.debug(" finished process_request_vote " + str(one_recv_json_message_dict), extra=self.my_detail)
 
@@ -425,10 +455,17 @@ class RaftPeer:
             # vote self
             self.raft_peer_state.leader_majority_count = 1
             socket_keys = self.peers_addr_client_socket.keys()
+            temp_request_vote = None
             # logger.debug(" before loop ", extra=self.my_detail)
             for one_add_port_tuple in socket_keys:
                 # logger.debug(" in loop ", extra=self.my_detail)
-                self.json_message_send_queue.put(RequestVote(self.raft_peer_state, one_add_port_tuple).return_instance_vars_in_dict())
+                temp_request_vote = RequestVote(self.raft_peer_state, one_add_port_tuple).return_instance_vars_in_dict()
+                self.json_message_send_queue.put(temp_request_vote)
+            if self.visualizaiton_on and len(socket_keys) is not 0:
+                # send to visualization one request json among all other peers
+                temp_request_vote_deep_copy = copy.deepcopy(temp_request_vote)
+                temp_request_vote_deep_copy["send_to"] = list(self.visualization_addr_port_tuple)
+                self.json_message_send_queue.put(temp_request_vote_deep_copy)
         logger.debug(" finished request vote to all peers as client ", extra=self.my_detail)
 
     def put_sent_to_all_peer_append_entries_heart_beat(self):
