@@ -38,14 +38,10 @@ class AppendEntriesFollower:
                   "msg_type": "append_entries_follower_reply"}
 
         # meet heartbeat append entries
-        if len(self.new_entries) == 0:
-            return result
+        if len(self.new_entries) != 0:
 
-        else:
             log_index_start = self.new_entries[0]["log_index"]
             log_index_end = self.new_entries[-1]["log_index"]
-            result["log_index_start"] = log_index_start
-            result["log_index_end"] = log_index_end
 
 
         # #reply false if this.follower's term > leader's term
@@ -68,6 +64,13 @@ class AppendEntriesFollower:
             if (self.raft_peer_state.state_log[self.prev_log_index].log_term != self.prev_log_term):
                 result["append_entries_result"] = False
                 return result
+
+        if len(self.new_entries) == 0:
+            return result
+
+        result["log_index_start"] = log_index_start
+        result["log_index_end"] = log_index_end
+
         result["append_entries_result"] = True
 
         # self.raft_peer_state.current_term = self.leader_term
