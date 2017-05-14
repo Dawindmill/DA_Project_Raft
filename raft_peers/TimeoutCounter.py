@@ -52,3 +52,7 @@ class TimeoutCounter:
         #with self.lock: will get dead lock here
         self.time_out = self.time_out_const
         logger.debug(" time_out reset => " + str(self.time_out), extra=self.my_detial)
+    def reset_timeout_append_entries(self):
+        #with self.lock: will get dead lock here
+        self.time_out = self.append_entries_heart_beat_time_out
+        logger.debug(" time_out reset => " + str(self.time_out), extra=self.my_detial)

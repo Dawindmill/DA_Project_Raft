@@ -290,7 +290,7 @@ class RaftPeer:
             else:
                 logger.debug(" starting process_append_entries_follower_reply False" + str(one_recv_json_message_dict),
                              extra=self.my_detail)
-                logger.debug(" starting process_append_entries_follower_reply False next_index => " + str(self.raft_peer_state.peers_next_index[tuple(one_recv_json_message_dict["send_from"])]) + str(one_recv_json_message_dict),
+                logger.debug(" starting process_append_entries_follower_reply False next_index => " + str(self.raft_peer_state.peers_next_index[tuple(one_recv_json_message_dict["send_from"])]) + " " + str(one_recv_json_message_dict),
                              extra=self.my_detail)
                 with self.raft_peer_state.lock:
                     if self.raft_peer_state.peers_next_index[tuple(one_recv_json_message_dict["send_from"])] > 0:
@@ -307,6 +307,7 @@ class RaftPeer:
         logger.debug(" starting process_append_entries_leader " + str(one_recv_json_message_dict), extra=self.my_detail)
         with self.raft_peer_state.lock:
             # when received heart beat from leader, reset self timeout of starting new election
+            # reset timeout to eleciton timeout
             self.timeout_counter.reset_timeout()
             self.raft_peer_state.peer_state = "follower"
             self.raft_peer_state.vote_for = None
@@ -358,7 +359,8 @@ class RaftPeer:
 
                     logger.debug(" I am leader ", extra=self.my_detail)
                     # init nextIndex[] and matchIndex[]
-                    self.timeout_counter.reset_timeout()
+                    # set self.timeout to append entries
+                    self.timeout_counter.reset_timeout_append_entries()
                     self.raft_peer_state.initialize_peers_next_and_match_index(self.peers_addr_client_socket)
                     self.put_sent_to_all_peer_append_entries_heart_beat()
 
@@ -418,7 +420,7 @@ class RaftPeer:
                 one_peer_addr, one_peer_port = peer_addr_port_tuple_list[count%len(self.peer_addr_port_tuple_list)]
             else:
                 #print("self")
-                time.sleep(0.1)
+                time.sleep(1)
                 continue
             # while True:
             try:
@@ -428,9 +430,9 @@ class RaftPeer:
             except Exception as e:
                 print("failed connect to " + str((str(one_peer_addr), int(one_peer_port))))
                 # logger.debug("raft peer connect to " + str((one_peer_addr, one_peer_port)) + " failed retry, exception => " + str(e), extra=self.my_detail)
-                time.sleep(0.1)
+                time.sleep(1)
                 continue
-            time.sleep(0.1)
+            time.sleep(1)
 
     def connect_to_peer(self, peer_addr_port_tuple):
         # use to send message to other peers
