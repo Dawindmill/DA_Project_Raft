@@ -21,23 +21,22 @@ class Villager(Image, threading.Thread):
     # for testing purpose only want to create one leader
     leader_taken = False
 
-    def __init__(self, socket_set, image, position, villager_id, font):
+    def __init__(self, image, position, villager_id, font, listener, current_leader):
+        self.role = Role.FOLLOWER
+        self.listener = listener
+        self.current_leader = current_leader
+        self.leadership_term = 0
         # render shouting
         self.message_count = 1
         # for testing to only create one leader
         self.skills = []
         self.max_health = Constant.VILLAGER_MAX_HP
         self.current_health = 1.0
-        self.requests = []
         self.current_message = ""
         self.message_countdown = 0
-        self.learned_skills = []
+        self.learned_skill_names = []
         self.learning_skill = None
-        self.host = ""
-        self.listening_port = 0
-        self.peer_id = ""
         self.dead = False
-        self.socket = socket_set
         width, height = image.get_rect().size
         center_x, center_y = position
         super().__init__(image, center_x, center_y, height, width)
@@ -55,11 +54,11 @@ class Villager(Image, threading.Thread):
 
         self.house = House(self.x, self.y)
 
-        self.addItemToLeftHand(ConstantImage.ARMOUR_IMAGE_SPRITE,Constant.ITEM_NAME_ARMOUR ,Constant.ARMOUR_IMAGE_SCLAE)
-        self.addItemToRightHand(ConstantImage.SWORD_IMAGE_SPRITE, Constant.ITEM_NAME_SWORD, Constant.SWORD_IMAGE_SCALE)
+        #self.addItemToLeftHand(ConstantImage.ARMOUR_IMAGE_SPRITE,Constant.ITEM_NAME_ARMOUR ,Constant.ARMOUR_IMAGE_SCLAE)
+        #self.addItemToRightHand(ConstantImage.SWORD_IMAGE_SPRITE, Constant.ITEM_NAME_SWORD, Constant.SWORD_IMAGE_SCALE)
 
         # self.request_parser = VillagerListener(self)
-        # threading.Thread.__init__(self)
+        threading.Thread.__init__(self)
 
         self.attack_probability = 0.5
         self.attack_display_count_down = Constant.ATTACK_DISPLAY_COUNT_DOWN
@@ -108,40 +107,80 @@ class Villager(Image, threading.Thread):
         one_skill = Skill(skill_name, skill_image, self.x - self.width/2 + (int (skill_num%4) * ((skill_image.get_rect().size)[0] * Constant.SKILL_IMAGE_SCALE_VILLAGER)), (self.y - self.height/2) - 15 - (int(skill_num / 4) * int((skill_image.get_rect().size)[1] * Constant.SKILL_IMAGE_SCALE_VILLAGER)), Constant.SKILL_IMAGE_SCALE_VILLAGER, False)
         self.skills.append(one_skill)
 
-    def set_leader_role(self, role):
+    '''def set_leader_role(self, role):
         if not Villager.leader_taken and role == Role.LEADER:
             Villager.leader_taken = True
             self.role = role
         else:
-            self.role = Role.CANDIDATE
+            self.role = Role.CANDIDATE'''
 
     def run(self):
         # self.request_parser.start()
-        while not self.dead:
-            while self.requests:
-                request = self.requests.pop(0)
+        while not self.dead and self.listener.isAlive():
+            while self.listener.request_queue:
+                request = self.listener.request_queue.pop(0)
                 request_type = request[Constant.MESSAGE_TYPE]
-                if request_type == Constant.SERVER_INFO:
-                    self.set_info(request)
-                elif request_type == Constant.APPEND and self.role == Role.LEADER:
+                if request_type == Constant.APPEND and self.role == Role.LEADER:
                     if not request[Constant.NEW_ENTRIES]:
                         self.reclaim_authority()
+                    #else:
+                    #    self.spread_skill(request[Constant.SEND_TO], request[Constant.NEW_ENTRIES])
+                elif request_type == Constant.LEADERSHIP:
+                    self.set_leadership(request)
+                elif request_type == Constant.REQUEST_VOTE:
+                    self.set_candidate(request)
                 elif request_type == Constant.APPEND_REPLY:
                     self.learned_skill(request)
             if self.current_health == 0:
                 self.dead = True
-        if self.dead:
-            data = {Constant.MESSAGE_TYPE: "villager_killed", Constant.PEER_ID: self.peer_id}
-            self.socket.sendall(str.encode(json.dumps(data)))
 
-    def set_info(self, info):
-        self.host = info["host"]
-        self.listening_port = info["port"]
-        self.peer_id = info["peer_id"]
+        if not self.listener.isAlive():
+            print(self.villager_id + "'s listener is dead")
+            self.dead = True
+        if self.dead:
+            data = {Constant.MESSAGE_TYPE: "villager_killed", Constant.PEER_ID: self.listener.peer_id}
+            self.listener.socket.sendall(str.encode(json.dumps(data)))
+
 
     def reclaim_authority(self):
-        self.current_message = Constant.AUTHORITY_MESSAGE
+        self.set_message(Constant.AUTHORITY_MESSAGE)
+
+    def set_leadership(self, request):
+        term = request[Constant.SENDER_TERM]
+        if self.current_leader and self.current_leader.leader_term > term:
+            return
+        self.role = Role.LEADER
+        self.leadership_term = term
+        self.reclaim_authority()
+
+    def set_candidate(self, request):
+        term = request[Constant.SENDER_TERM]
+        if self.current_leader and self.current_leader.leader_term > term:
+            return
+        self.role = Role.CANDIDATE
+        self.set_message(Constant.CANDIDATE_MESSAGE)
+
+
+    def learned_skill(self, request):
+        skill_name = ""
+        if skill_name == Constant.ARMOUR:
+            self.addItemToLeftHand(ConstantImage.ARMOUR_IMAGE_SPRITE,Constant.ITEM_NAME_ARMOUR ,Constant.ARMOUR_IMAGE_SCLAE)
+        elif skill_name == Constant.SWORD:
+            self.addItemToRightHand(ConstantImage.SWORD_IMAGE_SPRITE, Constant.ITEM_NAME_SWORD, Constant.SWORD_IMAGE_SCALE)
+        elif skill_name == Constant.ANIMAL:
+            for tile in self.land.tiles:
+                if tile.tile_type == Constant.TILE_TYPE_ANIMAL:
+                    tile.display_plant_or_animal = True
+        elif skill_name == Constant.PLANT:
+            for tile in self.land.tiles:
+                if tile.tile_type == Constant.TILE_TYPE_PLANT:
+                    tile.display_plant_or_animal = True
+        self.learned_skill_names.append(skill_name)
+
+    def set_message(self, message):
+        self.current_message = message
         self.message_countdown = Constant.MESSAGE_TIME
+
 
     def max_health_up(self):
         self.max_health += 1
@@ -164,7 +203,7 @@ class Villager(Image, threading.Thread):
 
     def attack_monster_or_not(self, monster):
 
-        if self.attacked:
+        if self.attacked or (Constant.SWORD in self.learned_skill_names):
             return
 
         self.attacked = random.random() >= self.attack_probability
@@ -214,10 +253,10 @@ class Villager(Image, threading.Thread):
 
         if self.role != Role.FOLLOWER:
             if self.role == Role.LEADER:
-                m = "Leader"
+                title = "Leader"
             else:
-                m = "Candidate"
-            role = self.font.render(m, 1, Constant.BLACK)
+                title = "Candidate"
+            role = self.font.render(title, 1, Constant.BLACK)
             screen.blit(role, (self.x - role.get_width() // 2, self.y + self.height // 2 + role.get_height() + 2))
 
         if self.message_countdown > 0:
@@ -241,9 +280,9 @@ class Villager(Image, threading.Thread):
                                                                (self.width,
                                                                 self.height)))
 
-            for i in range(self.message_count):
-                message = self.font.render("I am Leader", 1, Constant.BLACK)
-                screen.blit(message, (self.x - self.width * 1.5 + 1, self.y - self.height // 4 + message.get_height() * i))
+            #for i in range(self.message_count):
+            #    message = self.font.render("I am Leader", 1, Constant.BLACK)
+            #    screen.blit(message, (self.x - self.width * 1.5 + 1, self.y - self.height // 4 + message.get_height() * i))
             self.message_count += 1
             if self.message_count > 5:
                 self.message_count = 1

@@ -19,8 +19,8 @@ class Player(Image):
     # skill => from button
     def passing_down_skill(self, skill, villager_list):
         # if this skill is already clicked just return
-        if skill.applied:
-            return
+        #if skill.applied:
+        #    return
 
         with Villager.lock:
             cur_leader = self.find_leader(villager_list)
