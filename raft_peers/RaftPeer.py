@@ -326,7 +326,7 @@ class RaftPeer:
                     temp_processed_append_entries_result_json_deep_copy["send_to"] = list(self.visualization_addr_port_tuple)
                     # note that leader append entries used the key 'leader_commit_index' which is different key used in here
                     temp_processed_append_entries_result_json_deep_copy["sender_commit_index"] = self.raft_peer_state.current_term
-                    self.json_message_send_queue(temp_processed_append_entries_result_json_deep_copy)
+                    self.json_message_send_queue.put(temp_processed_append_entries_result_json_deep_copy)
 
             self.json_message_send_queue.put(temp_processed_append_entries_result_json)
             logger.debug(" after append entries from leader => \n " + str(self.raft_peer_state),
@@ -595,13 +595,18 @@ class RaftPeer:
             peer_socket = self.visualization_scoket
         else:
             logger.debug(" can't find this addr_port_tuple in either dicts " , extra=self.my_detail)
+            return
 
         msg = ""
+        temp = ""
         #could be wrong if msg size bigger than 1024, need further testing
         while True:
 
             try:
-                msg += peer_socket.recv(1024).decode("utf-8")
+                # if remote close it should return "" ?
+                temp = peer_socket.recv(1024).decode("utf-8")
+                if temp == "":
+                    raise Exception()
                 # remote closed recev will still return infinite empty string
             except Exception as e:
                 logger.debug(" one listen incoming socket closed " + str(e) + str(peer_addr_port_tuple), extra=self.my_detail)
@@ -613,6 +618,7 @@ class RaftPeer:
                     self.user_addr_listen_socket.pop(peer_addr_port_tuple)
                 return
 
+            msg += temp
             if "\n" in msg:
                 msg_split_list = msg.split("\n")
                 msg = msg_split_list[-1]
