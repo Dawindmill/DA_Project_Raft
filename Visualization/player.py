@@ -26,32 +26,32 @@ class Player(Image):
         #if skill.applied:
         #    return
         debug_print("in passing skill" + skill.skill_name)
-        with Villager.lock:
-            cur_leader = self.find_leader(villager_list)
-            if cur_leader:
-                debug_print("leader!")
-                if self.last_skill == None:
-                    #cur_leader.add_skill(skill.skill_name)
-                    # disable the skill button
-                    skill.applied = True
-                    self.last_skill = skill
-                    self.send_command_to_leader(skill, cur_leader)
-                    return True
-                else:
-                    debug_print("we've got last skill!")
-                    for one_skill_from_villager in cur_leader.skills:
-                        if self.last_skill.skill_name == one_skill_from_villager.skill_name:
-                            if one_skill_from_villager.applied == False:
-                                debug_print("last skill is not applied")
-                                return False
-                            else:
-                                #cur_leader.add_skill(skill.skill_name)
-                                # disable the skill button
-                                skill.applied = True
-                                self.last_skill = skill
-                                self.send_command_to_leader(skill, cur_leader)
-                                debug_print("True returned!")
-                                return True
+        #with Villager.lock:
+        cur_leader = self.find_leader(villager_list)
+        if cur_leader:
+            debug_print("leader!")
+            if self.last_skill == None:
+                #cur_leader.add_skill(skill.skill_name)
+                # disable the skill button
+                skill.applied = True
+                self.last_skill = skill
+                self.send_command_to_leader(skill, cur_leader)
+                return True
+            else:
+                debug_print("we've got last skill!")
+                for one_skill_from_villager in cur_leader.skills:
+                    if self.last_skill.skill_name == one_skill_from_villager.skill_name:
+                        if one_skill_from_villager.applied == False:
+                            debug_print("last skill is not applied")
+                            return False
+                        else:
+                            #cur_leader.add_skill(skill.skill_name)
+                            # disable the skill button
+                            skill.applied = True
+                            self.last_skill = skill
+                            self.send_command_to_leader(skill, cur_leader)
+                            debug_print("True returned!")
+                            return True
             return False
 
     def send_command_to_leader(self, skill, leader):

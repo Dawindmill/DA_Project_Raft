@@ -161,7 +161,7 @@ class Villager(Image, threading.Thread):
 
     def set_leadership(self, request):
         term = request[Constant.SENDER_TERM]
-        if self.current_leader and self.current_leader.leader_term > term:
+        if self.current_leader and self.current_leader.leadership_term > term:
             return
         self.role = Role.LEADER
         self.leadership_term = term
@@ -169,7 +169,7 @@ class Villager(Image, threading.Thread):
 
     def set_candidate(self, request):
         term = request[Constant.SENDER_TERM]
-        if self.current_leader and self.current_leader.leader_term > term:
+        if self.current_leader and self.current_leader.leadership_term > term:
             return
         self.role = Role.CANDIDATE
         self.set_message(Constant.CANDIDATE_MESSAGE)

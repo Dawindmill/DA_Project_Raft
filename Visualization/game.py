@@ -21,7 +21,7 @@ from night_event import NightEvent
 day_countdown = Constant.ONE_DAY
 
 # skills => {skill_name: Skill()}
-def start_game(screen, font, villager_images, monster_image, skills, skill_images, clock, villagers_connections, player):
+def start_game(screen, font, villager_images, monster_image, skills, skill_images, clock, villagers_connections, player, s):
     global day_countdown
 
     villager_count = 0
@@ -104,6 +104,13 @@ def start_game(screen, font, villager_images, monster_image, skills, skill_image
             if villager:
                 if not villager.dead:
                     villager.render(screen)
+
+                    if villager.turning_learned_skills_list:
+                        villager.learned_skill(None)
+
+                        for one_skill_from_villager in villager.skills:
+                            one_skill_from_villager.skill_handler(villager, villagers, monsters, player)
+                        villager.render_attack(screen)
                 else:
                     alive_villagers_list.remove(villager)
                     existing_peer_ids.remove(villager.listener.peer_id)
@@ -124,14 +131,14 @@ def start_game(screen, font, villager_images, monster_image, skills, skill_image
                 one_monster.render(screen)
 
         # render attack
-        for one_villager in villagers:
+        '''for one_villager in villagers:
             if one_villager and not one_villager.dead:
                 if one_villager.turning_learned_skills_list:
                     one_villager.learned_skill(None)
                 # apply skills
                 for one_skill_from_villager in one_villager.skills:
                     one_skill_from_villager.skill_handler(one_villager, villagers, monsters, player)
-                one_villager.render_attack(screen)
+                one_villager.render_attack(screen)'''
 
         '''for one_monster in monsters:
             if not one_monster.dead:
@@ -147,26 +154,29 @@ def start_game(screen, font, villager_images, monster_image, skills, skill_image
             one_skill.greyed = greyed
             one_skill.render(screen)
 
+        #print(" day_countdown " + str(day_countdown))
         if day_countdown <= 0:
             day_countdown = Constant.ONE_DAY
         elif day_countdown <= Constant.NIGHT_TIME:
-            if day_countdown == Constant.NIGHT_TIME:
+            #print ("night")
                 #alive_villagers_list = [one_villager for one_villager in villagers if not one_villager.dead]
-                for monster in monsters:
-                    if not monster.dead:
+            for monster in monsters:
+                if not monster.dead:
+                    if day_countdown == Constant.NIGHT_TIME:
                         monster.night_event.perform_event(alive_villagers_list)
+
+                    monster.night_event.render_event(screen)
 
             '''for one_monster in monsters:
                 villagers_not_dead = [one_villager for one_villager in villagers if not one_villager.dead]
                 one_monster.attack_villager_or_not(villagers_not_dead, True)
                 # one_monster.render(screen)'''
 
-            for monster in monsters:
-                if not monster.dead:
-                    monster.night_event.render_event(screen)
+            '''for monster in monsters:
+                if not monster.dead:'''
 
             # inspired from http://stackoverflow.com/questions/6339057/draw-a-transparent-rectangle-in-pygame
-            s = pygame.Surface((Constant.SCREEN_WIDTH, Constant.SCREEN_HEIGHT))  # the size of your rect
+            #s = pygame.Surface((Constant.SCREEN_WIDTH, Constant.SCREEN_HEIGHT))  # the size of your rect
             s.set_alpha(200)  # alpha level
             s.fill(Constant.BLACK)  # this fills the entire surface
             screen.blit(s, (0, 0))  # (0,0) are the top-left coordinates
@@ -240,6 +250,7 @@ def main():
     villager_connections = []
 
     listener = ConnectionListener(villager_connections)
+    listener.daemon = True
     listener.start()
     index = 0
     for skill_name, skill_image in skill_images.items():
@@ -247,7 +258,8 @@ def main():
         skills[skill_name.split(".")[0]] = Skill(skill_name.split(".")[0], skill_image, Constant.SCREEN_WIDTH - (((skill_image.get_rect().size)[0] * Constant.SKILL_IMAGE_SCALE)/2), 50 + index * ((skill_image.get_rect().size)[0] * Constant.SKILL_IMAGE_SCALE), Constant.SKILL_IMAGE_SCALE, applied=False, greyed=False)
         index += 1
     player = Player(player_image, Constant.SAGE_POSITION[0], Constant.SAGE_POSITION[1])
-    start_game(screen, font, villager_images, monster_image, skills, skill_images, clock, villager_connections, player)
+    surface = pygame.Surface((Constant.SCREEN_WIDTH, Constant.SCREEN_HEIGHT))
+    start_game(screen, font, villager_images, monster_image, skills, skill_images, clock, villager_connections, player, surface)
     listener.close_socket()
 
 

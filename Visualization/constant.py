@@ -135,12 +135,12 @@ class Constant:
     PORT_INDEX = 1
 
 
-    MESSAGE_TIME = 3 * FRAME_PER_SECOND
+    MESSAGE_TIME = 1 * FRAME_PER_SECOND
 
-    ONE_DAY = 20 * FRAME_PER_SECOND
+    ONE_DAY = int(20 * FRAME_PER_SECOND)
     # ONE_DAY = 70
-    DAY_TIME = ONE_DAY / 4 * 3
-    NIGHT_TIME = ONE_DAY / 4
+    DAY_TIME = int(ONE_DAY / 4 * 3)
+    NIGHT_TIME = int(ONE_DAY / 4)
     # NIGHT_TIME = 70
 
     DEBUG = False
