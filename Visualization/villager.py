@@ -36,6 +36,7 @@ class Villager(Image, threading.Thread):
         self.current_message = ""
         self.message_countdown = 0
         self.learned_skill_names = []
+        self.turning_learned_skills_list = []
         self.learning_skill = None
         self.dead = False
         width, height = image.get_rect().size
@@ -53,7 +54,7 @@ class Villager(Image, threading.Thread):
 
         self.land = Land(self, Constant.LAND_SIZE)
 
-        self.house = House(self.x, self.y)
+        self.house = None
 
         #self.addItemToLeftHand(ConstantImage.ARMOUR_IMAGE_SPRITE,Constant.ITEM_NAME_ARMOUR ,Constant.ARMOUR_IMAGE_SCLAE)
         #self.addItemToRightHand(ConstantImage.SWORD_IMAGE_SPRITE, Constant.ITEM_NAME_SWORD, Constant.SWORD_IMAGE_SCALE)
@@ -108,7 +109,7 @@ class Villager(Image, threading.Thread):
         image = self.skill_images[skill_name]
 
         # each row render four skill, then go up
-        one_skill = Skill(skill_name, image, self.x - self.width/2 + (int (skill_num%4) * ((image.get_rect().size)[0] * Constant.SKILL_IMAGE_SCALE_VILLAGER)), (self.y - self.height/2) - 15 - (int(skill_num / 4) * int((skill_image.get_rect().size)[1] * Constant.SKILL_IMAGE_SCALE_VILLAGER)), Constant.SKILL_IMAGE_SCALE_VILLAGER, False)
+        one_skill = Skill(skill_name, image, self.x - self.width/2 - ((image.get_rect().size)[0] * Constant.SKILL_IMAGE_SCALE_VILLAGER) / 2, (self.y + self.height/2) - (int (skill_num) * int((image.get_rect().size)[1] * Constant.SKILL_IMAGE_SCALE_VILLAGER)), Constant.SKILL_IMAGE_SCALE_VILLAGER, False)
         self.skills.append(one_skill)
 
     '''def set_leader_role(self, role):
@@ -138,16 +139,21 @@ class Villager(Image, threading.Thread):
                 elif request_type == Constant.REQUEST_COMMAND_ACK and self.role == Role.LEADER:
                     self.leader_receive_learn(request)
                 elif request_type == Constant.APPEND_REPLY:
+                    self.learning_skill(request)
+                elif request_type == Constant.COMMIT_INDEX:
                     self.learned_skill(request)
             if self.current_health == 0:
+                debug_print("Villager" + str(self.villager_id) + " is dead")
                 self.dead = True
 
         if not self.listener.isAlive():
-            print(self.villager_id + "'s listener is dead")
+            print(str(self.villager_id) + "'s listener is dead")
             self.dead = True
         if self.dead:
             data = {Constant.MESSAGE_TYPE: "villager_killed", Constant.PEER_ID: self.listener.peer_id}
-            self.listener.socket.sendall(str.encode(json.dumps(data)))
+            self.listener.socket.sendall(str.encode(json.dumps(data) + "\n"))
+            debug_print("villager killed message sent")
+            self.listener.close_socket()
 
 
     def reclaim_authority(self):
@@ -195,7 +201,31 @@ class Villager(Image, threading.Thread):
 
 
     def learned_skill(self, request):
-        skill_name = ""
+        debug_print("in learned_skill")
+        if not request:
+            while self.turning_learned_skills_list and self.turning_learned_skills_list[0][0] == len(
+                    self.learned_skill_names):
+                skill = self.turning_learned_skills_list.pop(0)
+                self.learned_skill(skill[1])
+            return
+        index = int(request[Constant.INDEX])
+        debug_print("index is" + str(index))
+        debug_print("skills: ")
+        debug_print(self.skills)
+        if index == len(self.learned_skill_names):
+            skill_name = self.skills[index].skill_name
+            debug_print("skill name: " + skill_name)
+        else:
+            while self.turning_learned_skills_list and self.turning_learned_skills_list[0][0] == len(self.learned_skill_names):
+                skill = self.turning_learned_skills_list.pop(0)
+                self.learned_skill(skill[1])
+            self.turning_learned_skills_list.append((index, request))
+            self.turning_learned_skills_list.sort()
+            debug_print("returned in else")
+            return
+        if skill_name not in Constant.SKILLS:
+            debug_print("not in skills")
+            return
         if skill_name == Constant.ARMOUR:
             self.addItemToLeftHand(ConstantImage.ARMOUR_IMAGE_SPRITE,Constant.ITEM_NAME_ARMOUR ,Constant.ARMOUR_IMAGE_SCLAE)
         elif skill_name == Constant.SWORD:
@@ -208,6 +238,8 @@ class Villager(Image, threading.Thread):
             for tile in self.land.tiles:
                 if tile.tile_type == Constant.TILE_TYPE_PLANT:
                     tile.display_plant_or_animal = True
+        self.skills[index].greyed = False
+        debug_print("set skill greyed false")
         self.learned_skill_names.append(skill_name)
 
     def set_message(self, message):
@@ -236,7 +268,8 @@ class Villager(Image, threading.Thread):
 
     def attack_monster_or_not(self, monster):
 
-        if self.attacked or (Constant.SWORD in self.learned_skill_names):
+        if (Constant.SWORD not in self.learned_skill_names) or self.attacked or \
+                (Constant.SWORD in self.learned_skill_names):
             return
 
         self.attacked = random.random() >= self.attack_probability
@@ -254,7 +287,12 @@ class Villager(Image, threading.Thread):
 
         if self.house is not None and self.house.display_house:
             self.house.house_durability_decrement_with_amount(hp_decrement)
+            if self.house.current_durability <= 0:
+                house = None
             return
+
+        if Constant.ARMOUR in self.learned_skill_names:
+            hp_decrement -= Constant.ITEM_ARMOUR_DEFEND_POWER_ADD
 
         if hp_decrement >= self.current_health:
             self.current_health = 0
@@ -271,7 +309,7 @@ class Villager(Image, threading.Thread):
 
     def render(self, screen):
 
-        if self.house.display_house:
+        if self.house and self.house.display_house:
             self.house.render(screen)
 
         super().render(screen)

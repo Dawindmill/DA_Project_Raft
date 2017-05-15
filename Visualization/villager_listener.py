@@ -59,7 +59,7 @@ class VillagerListener(threading.Thread):
                             self.request_queue.append(parsed)
             except ConnectionAbortedError:
                 print(self.peer_id + " connection aborted")
-                self.wait()
+                break
 
     def close_socket(self):
         self.socket.close()

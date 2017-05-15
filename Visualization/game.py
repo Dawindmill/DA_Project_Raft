@@ -106,7 +106,6 @@ def start_game(screen, font, villager_images, monster_image, skills, skill_image
                 else:
                     alive_villagers_list.remove(villager)
                     existing_peer_ids.remove(villager.listener.peer_id)
-                    villager.listener.close_socket()
                     villagers[villager_index] = None
                     villager_count -= 1
         # find leader
@@ -116,7 +115,8 @@ def start_game(screen, font, villager_images, monster_image, skills, skill_image
         if new_leader != current_leader:
             current_leader = new_leader
             for villager in villagers:
-                villager.current_leader = new_leader
+                if villager:
+                    villager.current_leader = new_leader
 
         for one_monster in monsters:
             if not one_monster.dead:
@@ -124,7 +124,9 @@ def start_game(screen, font, villager_images, monster_image, skills, skill_image
 
         # render attack
         for one_villager in villagers:
-            if not one_villager.dead:
+            if one_villager and not one_villager.dead:
+                if one_villager.turning_learned_skills_list:
+                    one_villager.learned_skill(None)
                 # apply skills
                 for one_skill_from_villager in one_villager.skills:
                     one_skill_from_villager.skill_handler(one_villager, villagers, monsters, player)
@@ -135,6 +137,13 @@ def start_game(screen, font, villager_images, monster_image, skills, skill_image
                 one_monster.render_attack(screen)'''
 
         for one_skill in skills.values():
+            greyed = False
+            if current_leader:
+                for l_skill in current_leader.skills:
+                    if one_skill.skill_name == l_skill.skill_name:
+                        greyed = True
+                        break
+            one_skill.greyed = greyed
             one_skill.render(screen)
 
         if day_countdown <= 0:
@@ -184,6 +193,8 @@ def start_game(screen, font, villager_images, monster_image, skills, skill_image
                 clicked_skills = [(skill_name, one_skill) for skill_name, one_skill in skills.items() if one_skill.image_rect.collidepoint(pos)]
                 clicked_villager_tiles_tuple = []
                 for one_villager in villagers:
+                    if not one_villager:
+                        continue
                     temp_tiles = []
                     for one_tile in one_villager.land.tiles:
                         if one_tile.image_rect.collidepoint(pos):
@@ -216,7 +227,8 @@ def main():
     screen = pygame.display.set_mode((Constant.SCREEN_WIDTH, Constant.SCREEN_HEIGHT))
     screen.fill(Constant.WHITE)
     villager_images = []
-    skill_images = {image_file_name.split("/")[-1]:pygame.image.load(image_file_name) for image_file_name in Constant.SKILL_IMAGES}
+    skill_images = {(image_file_name.split("/")[-1]).split(".")[0]:pygame.image.load(image_file_name) for image_file_name in Constant.SKILL_IMAGES}
+    print(skill_images.items())
     skills = {}
     debug_print(str(skill_images))
     for image in Constant.VILLAGER_IMAGES:

@@ -3,7 +3,7 @@ class Constant:
     GAME_NAME = "Heritage"
 
     GAME_HOST = "192.168.1.101"
-    GAME_PORT = 8888
+    GAME_PORT = 11222
 
     SCREEN_WIDTH = 1100
     SCREEN_HEIGHT = 800
@@ -22,6 +22,8 @@ class Constant:
     HOUSE = "house"
     PLANT = "plant"
     SWORD = "sword"
+
+    SKILLS = [ANIMAL, ARMOUR, HOUSE, PLANT, SWORD]
 
     ITEM_NAME_SWORD = "sword"
     ITEM_NAME_SWORD_ATTACK_POWER_ADD = 1
@@ -105,9 +107,10 @@ class Constant:
     REQUEST_COMMAND_REPLY = "request_command_reply"
     SERVER_INFO = "information"
     LEADERSHIP = "leadership"
+    COMMIT_INDEX = "commit_index"
 
     MESSAGE_TYPES = [APPEND, APPEND_REPLY, REQUEST_VOTE, REQUEST_VOTE_REPLY, REQUEST_COMMAND, REQUEST_COMMAND_ACK,
-                     REQUEST_COMMAND_REPLY, SERVER_INFO, LEADERSHIP]
+                     REQUEST_COMMAND_REPLY, SERVER_INFO, LEADERSHIP, COMMIT_INDEX]
 
     REQUEST_COMMAND_LIST = "request_command_list"
     SEND_FROM = "send_from"

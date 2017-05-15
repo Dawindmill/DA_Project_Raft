@@ -16,6 +16,7 @@ class ConnectionListener(threading.Thread):
 
     def run(self):
         self.skt = socket.socket()
+        self.skt.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.skt.bind((self.host, self.port))
         self.skt.listen(5)
         debug_print("Listener started listinging on port " + str(self.port))
