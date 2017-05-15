@@ -107,6 +107,7 @@ def start_game(screen, font, villager_images, monster_image, skills, skill_image
             if villager:
                 if not villager.dead:
                     villager.render(screen)
+                    villager.build_house()
 
                     if villager.turning_learned_skills_list:
                         villager.learned_skill(None)
@@ -210,6 +211,9 @@ def start_game(screen, font, villager_images, monster_image, skills, skill_image
                 for one_villager in villagers:
                     if not one_villager:
                         continue
+                    if one_villager.image_rect.collidepoint(pos):
+                        one_villager.dead = True
+                        print("villager dead")
                     temp_tiles = []
                     for one_tile in one_villager.land.tiles:
                         if one_tile.image_rect.collidepoint(pos):

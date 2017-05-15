@@ -44,6 +44,7 @@ class Constant:
     HOUSE_IMAGE = "./assets/house.png"
     HOUSE_DURABILITY = 5
     HOUSE_IMAGE_SCALE = 0.3
+    BUILD_HOUSE_COUNT_DOWN = 40 * FRAME_PER_SECOND
 
     TILE_TYPE_PLANT = "plant"
     TILE_PLANT_IMAGE = "./assets/tiles/grass_tile.png"
@@ -54,7 +55,7 @@ class Constant:
     CHICKEN_IMAGE = "./assets/plant_animal/chicken.png"
     CHICHEN_EGG_IMAGE_SCALE = 1
     CHICEN_IAMGE_SCALE = 1
-    CHICKEN_MATURE_COUNT_DOWN = 100
+    CHICKEN_MATURE_COUNT_DOWN = 25 * FRAME_PER_SECOND
     ANIMAL_HEALTH_INCREASE = 1
 
 
@@ -62,7 +63,7 @@ class Constant:
     TREE_WITH_APPLE_IMAGE = "./assets/plant_animal/tree_with_apple.png"
     TREE_IMAGE_SCALE = 0.3
     TREE_WITH_APPLE_IMAGE_SCALE = 0.3
-    TREE_MATURE_COUNT_DOWN = 60
+    TREE_MATURE_COUNT_DOWN = 20 * FRAME_PER_SECOND
     PLANT_HEALTH_INCREASE = 0.5
 
     TILE_IMAGE_SCALE = 0.3
@@ -127,10 +128,13 @@ class Constant:
     APPEND_RESULT = "append_entries_result"
     LAST_LOG_INDEX = "log_index_end"
 
+    VILLAGER_DEAD = "dead"
+
     AUTHORITY_MESSAGE = "I'm the leader!"
     NEW_LEADER_MESSAGE = "I've become the new leader!"
     CANDIDATE_MESSAGE = "I want to be the leader!"
     VOTE_MESSAGE = "I vote for villager {}!"
+    BUILD_HOUSE_MESSAGE = "I need to build a house"
 
     HOST_INDEX = 0
     PORT_INDEX = 1

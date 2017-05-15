@@ -16,6 +16,7 @@ class VillagerListener(threading.Thread):
         self.socket = socket
         self.info_set = False
         self.request_queue = Queue()
+        self.stopped = False
 
     def parse_message(self, msg):
         try:
@@ -42,7 +43,7 @@ class VillagerListener(threading.Thread):
         self.peer_id = info["peer_id"]
 
     def run(self):
-        while True:
+        while not self.stopped:
             try:
                 self.in_msg += self.socket.recv(1024).decode("utf-8")
                 # print(" in_msg ")
@@ -61,10 +62,15 @@ class VillagerListener(threading.Thread):
                             self.request_queue.put(parsed)
             except ConnectionAbortedError:
                 print(self.peer_id + " connection aborted")
-                break
+                self.request_queue.put({Constant.MESSAGE_TYPE: Constant.VILLAGER_DEAD})
+                self.stopped = True
+            except ConnectionResetError:
+                print(self.peer_id + " connection closed by remote host")
+                self.request_queue.put({Constant.MESSAGE_TYPE: Constant.VILLAGER_DEAD})
+                self.stopped = True
 
-    def close_socket(self):
-        self.socket.close()
+    def stop_listener(self):
+        self.stopped = True
 
             #debug_print("message list: ")
             #debug_print(self.messages)

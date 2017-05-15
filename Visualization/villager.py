@@ -56,6 +56,7 @@ class Villager(Image, threading.Thread):
         self.land = Land(self, Constant.LAND_SIZE)
 
         self.house = None
+        self.build_house_countdown = Constant.BUILD_HOUSE_COUNT_DOWN
 
         #self.addItemToLeftHand(ConstantImage.ARMOUR_IMAGE_SPRITE,Constant.ITEM_NAME_ARMOUR ,Constant.ARMOUR_IMAGE_SCLAE)
         #self.addItemToRightHand(ConstantImage.SWORD_IMAGE_SPRITE, Constant.ITEM_NAME_SWORD, Constant.SWORD_IMAGE_SCALE)
@@ -122,13 +123,16 @@ class Villager(Image, threading.Thread):
 
     def run(self):
         # self.request_parser.start()
-        while not self.dead and self.listener.isAlive():
+        while (not self.dead) and (not self.listener.stopped):
+            print("peer" + str(self.villager_id) + "'s listener is stopped: " + str(self.listener.stopped))
             # print(" in here ")
             request = self.listener.request_queue.get()
             # while self.listener.request_queue:
 
             # request = self.listener.request_queue.pop(0)
             request_type = request[Constant.MESSAGE_TYPE]
+            if request_type == Constant.VILLAGER_DEAD:
+                continue
             if request_type == Constant.APPEND and self.role == Role.LEADER:
                 if not request[Constant.NEW_ENTRIES]:
                     self.reclaim_authority()
@@ -150,14 +154,18 @@ class Villager(Image, threading.Thread):
                 debug_print("Villager" + str(self.villager_id) + " is dead")
                 self.dead = True
 
-        if not self.listener.isAlive():
+        if self.listener.stopped:
             print(str(self.villager_id) + "'s listener is dead")
             self.dead = True
         if self.dead:
             data = {Constant.MESSAGE_TYPE: "villager_killed", Constant.PEER_ID: self.listener.peer_id}
-            self.listener.socket.sendall(str.encode(json.dumps(data) + "\n"))
+            try:
+                self.listener.socket.sendall(str.encode(json.dumps(data) + "\n"))
+                print("villager killed message sent")
+            except ConnectionResetError:
+                print("connection dead")
             print("villager killed message sent")
-            self.listener.close_socket()
+            self.listener.stop_listener()
             self.dead_message_sent = True
 
 
@@ -225,7 +233,8 @@ class Villager(Image, threading.Thread):
         debug_print("index is" + str(index))
         debug_print("skills: ")
         debug_print(self.skills)
-        if index == len(self.learned_skill_names):
+
+        if (index < len(self.skills)) and (index == len(self.learned_skill_names)):
             skill_name = self.skills[index].skill_name
             debug_print("skill name: " + skill_name)
         else:
@@ -251,6 +260,8 @@ class Villager(Image, threading.Thread):
             for tile in self.land.tiles:
                 if tile.tile_type == Constant.TILE_TYPE_PLANT:
                     tile.display_plant_or_animal = True
+        elif skill_name == Constant.HOUSE:
+            self.addHouse()
         self.skills[index].greyed = False
         self.skills[index].applied = True
         debug_print("set skill greyed false")
@@ -302,7 +313,7 @@ class Villager(Image, threading.Thread):
         if self.house is not None and self.house.display_house:
             self.house.house_durability_decrement_with_amount(hp_decrement)
             if self.house.current_durability <= 0:
-                house = None
+                self.house.display_house = False
             return
 
         if Constant.ARMOUR in self.learned_skill_names:
@@ -313,6 +324,18 @@ class Villager(Image, threading.Thread):
             self.dead = True
             return
         self.current_health -= hp_decrement
+
+    def build_house(self):
+        if self.house:
+            if not self.house.display_house:
+                if self.build_house_countdown == Constant.BUILD_HOUSE_COUNT_DOWN:
+                    self.set_message(Constant.BUILD_HOUSE_MESSAGE)
+                    self.build_house_countdown -= 1
+                elif self.build_house_countdown > 0:
+                    self.build_house_countdown -= 1
+                else:
+                    self.house.display_house = True
+                    self.build_house_countdown = Constant.BUILD_HOUSE_COUNT_DOWN
 
     def render_attack(self, screen):
         if self.attacked and self.attack_display_count_down != 0:
