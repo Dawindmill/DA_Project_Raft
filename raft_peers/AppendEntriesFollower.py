@@ -6,7 +6,8 @@ logger = logging.getLogger("AppendEntiesFollower")
 
 class AppendEntriesFollower:
     #for follower to receive it
-    def __init__(self, append_entries_json_data_dict, raft_peer_state):
+    def __init__(self, append_entries_json_data_dict, raft_peer_state, json_message_commit_queue):
+        self.json_message_commit_queue = json_message_commit_queue
         self.raft_peer_state = raft_peer_state
         self.host_port_dict = {"host":str(raft_peer_state.my_addr_port_tuple[0]),
                                "port":str(raft_peer_state.my_addr_port_tuple[1]),
@@ -106,10 +107,11 @@ class AppendEntriesFollower:
         # [include: exclude]
         for one_log_data in self.raft_peer_state.state_log[0:commit_index+1]:
             if one_log_data.log_applied == False:
-                self.raft_peer_state.remote_var.perform_action(one_log_data.request_command_action_list)
-                one_log_data.log_applied = True
-        self.raft_peer_state.last_apply = commit_index
-        self.commit_index = commit_index
+                self.json_message_commit_queue.put(one_log_data)
+                # self.raft_peer_state.remote_var.perform_action(one_log_data.request_command_action_list)
+                # one_log_data.log_applied = True
+        # self.raft_peer_state.last_apply = commit_index
+        # self.commit_index = commit_index
 
     def __str__(self):
         return str(vars(self))
