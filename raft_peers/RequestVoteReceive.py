@@ -16,6 +16,7 @@ class RequestVoteReceive:
     def process_request_vote(self):
     # leader append entries without lock is fine because there is always one leader?
         request_vote_result = {"msg_type": "request_vote_reply",
+                               "peer_id": self.raft_peer_state.peer_id,
                                "send_to": list(self.send_from),
                                "send_from": list(self.raft_peer_state.my_addr_port_tuple),
                                "sender_term": self.raft_peer_state.current_term,
