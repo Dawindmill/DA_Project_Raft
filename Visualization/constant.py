@@ -2,8 +2,9 @@ import os
 class Constant:
     GAME_NAME = "Heritage"
 
-    GAME_HOST = "192.168.1.101"
-    GAME_PORT = 11222
+    #GAME_HOST = "192.168.1.101"
+    GAME_HOST = "10.13.248.44"
+    GAME_PORT = 8888
 
     SCREEN_WIDTH = 1100
     SCREEN_HEIGHT = 800
@@ -122,6 +123,8 @@ class Constant:
     INDEX = "index"
     VOTE_PEER_ID = "vote_peer_id"
     VOTE_GRANTED = "vote_granted"
+    APPEND_RESULT = "append_entries_result"
+    LAST_LOG_INDEX = "log_index_end"
 
     AUTHORITY_MESSAGE = "I'm the leader!"
     NEW_LEADER_MESSAGE = "I've become the new leader!"
@@ -132,7 +135,7 @@ class Constant:
     PORT_INDEX = 1
 
 
-    MESSAGE_TIME = 5 * FRAME_PER_SECOND
+    MESSAGE_TIME = 3 * FRAME_PER_SECOND
 
     ONE_DAY = 20 * FRAME_PER_SECOND
     # ONE_DAY = 70
@@ -140,7 +143,7 @@ class Constant:
     NIGHT_TIME = ONE_DAY / 4
     # NIGHT_TIME = 70
 
-    DEBUG = True
+    DEBUG = False
 
     HEAL_BAR_HEIGHT = 5
 

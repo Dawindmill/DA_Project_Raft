@@ -47,7 +47,7 @@ def start_game(screen, font, villager_images, monster_image, skills, skill_image
             listener = VillagerListener(node_socket)
 
             listener_list.append(listener)
-
+            listener.daemon = True
             listener.start()
 
             debug_print("listener list: ")
@@ -89,6 +89,7 @@ def start_game(screen, font, villager_images, monster_image, skills, skill_image
                         #    villager.set_leader_role(Role.CANDIDATE)
                         #villagers.append(villager)
                         # diable villager thread for game devs
+                        villager.daemon = True
                         villager.start()
                         villager_count += 1
                         #next_villager_id += 1

@@ -37,7 +37,7 @@ class Villager(Image, threading.Thread):
         self.message_countdown = 0
         self.learned_skill_names = []
         self.turning_learned_skills_list = []
-        self.learning_skill = None
+        #self.learning_skill = None
         self.dead = False
         width, height = image.get_rect().size
         center_x, center_y = position
@@ -176,7 +176,7 @@ class Villager(Image, threading.Thread):
 
     def vote(self, request):
         term = request[Constant.SENDER_TERM]
-        if self.current_leader and self.current_leader.leader_term > term:
+        if self.current_leader and self.current_leader.leadership_term > term:
             return
         vote_for = request[Constant.VOTE_PEER_ID][4:]
         debug_print(type(request[Constant.VOTE_GRANTED]))
@@ -199,6 +199,13 @@ class Villager(Image, threading.Thread):
             self.skill_adding_list.append((index, skill_name))
             self.skill_adding_list.sort()
 
+    def learning_skill(self, request):
+        result = request[Constant.APPEND_RESULT]
+        if result and self.current_leader:
+            index = int(request[Constant.LAST_LOG_INDEX])
+            if (index >= len(self.skills)) and (index < len(self.current_leader.skills)):
+                for i in range(len(self.skills), index + 1):
+                    self.add_skill(self.current_leader.skills[i].skill_name)
 
     def learned_skill(self, request):
         debug_print("in learned_skill")
@@ -239,6 +246,7 @@ class Villager(Image, threading.Thread):
                 if tile.tile_type == Constant.TILE_TYPE_PLANT:
                     tile.display_plant_or_animal = True
         self.skills[index].greyed = False
+        self.skills[index].applied = True
         debug_print("set skill greyed false")
         self.learned_skill_names.append(skill_name)
 
