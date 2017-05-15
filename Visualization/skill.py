@@ -4,11 +4,12 @@ from debug_print import debug_print
 from constant_image import ConstantImage
 class Skill(Image):
 
-    def __init__(self, skill_name, image, center_x, center_y, scale=Constant.SKILL_IMAGE_SCALE, applied = False):
+    def __init__(self, skill_name, image, center_x, center_y, scale=Constant.SKILL_IMAGE_SCALE, applied = False, greyed = True):
         self.skill_name = skill_name
         width, height = image.get_rect().size
         self.applied = applied
         self.can_applied = False
+        self.greyed = greyed
         super().__init__(image, center_x, center_y, int(height*scale), int(width*scale))
 
 
@@ -35,6 +36,7 @@ class Skill(Image):
                 if one_tile.tile_type == Constant.TILE_TYPE_ANIMAL:
                     one_tile.display_plant_or_animal = True
                     self.applied = True
+                    self.greyed = False
 
     def armour_handler(self, cur_villager,villagers_list, monsters, player):
 
@@ -71,12 +73,12 @@ class Skill(Image):
 
     def render(self, screen):
         # if applied show full image with out transparency
-        if self.applied:
-            self.image.set_alpha(255)
+        if self.greyed:
+            self.image.set_alpha(100)
             self.image_rect = screen.blit(self.image, (self.x - self.width//2, self.y - self.height//2))
 
         else:
-            self.image.set_alpha(100)
+            self.image.set_alpha(255)
             self.image_rect = screen.blit(self.image, (self.x - self.width//2, self.y - self.height//2))
 
 

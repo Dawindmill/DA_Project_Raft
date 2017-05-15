@@ -34,7 +34,7 @@ class Tile(Image):
             self.animal_or_plant.append( pygame.transform.scale(mature, (int(width * Constant.CHICEN_IAMGE_SCALE), int(height * Constant.CHICEN_IAMGE_SCALE))))
 
         self.tile_type = tile_type
-        self.display_plant_or_animal = True
+        self.display_plant_or_animal = False
         self.mature = False
         width, height = image.get_rect().size
         self.applied = False

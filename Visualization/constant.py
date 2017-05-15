@@ -13,6 +13,13 @@ class Constant:
     GREEN = (0, 225, 0)
     BLUE = (0, 0, 225)
 
+    #skill names
+    ANIMAL = "animal"
+    ARMOUR = "armour"
+    HOUSE = "house"
+    PLANT = "plant"
+    SWORD = "sword"
+
     ITEM_NAME_SWORD = "sword"
     ITEM_NAME_SWORD_ATTACK_POWER_ADD = 1
     ITEM_NAME_ARMOUR = "armour"
@@ -92,6 +99,7 @@ class Constant:
     REQUEST_VOTE_REPLY = "request_vote_reply"
     REQUEST_COMMAND = "request_command"
     SERVER_INFO = "information"
+    LEADERSHIP = "leadership"
 
     SEND_FROM = "send_from"
     SEND_TO = "send_to"
@@ -100,7 +108,11 @@ class Constant:
 
     NEW_ENTRIES = "new_entries"
 
+    SENDER_TERM = "sender_term"
+
     AUTHORITY_MESSAGE = "I'm the leader!"
+    CANDIDATE_MESSAGE = "I want to be the leader!"
+    VOTE_MESSAGE = "I vote for villager {}!"
 
     HOST_INDEX = 0
     PORT_INDEX = 1
