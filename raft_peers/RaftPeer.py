@@ -1,10 +1,15 @@
 import _thread
 import json
+import os
+
 import jsonpickle
 import random
 import socket
 import logging
 from queue import Queue
+
+import sys
+
 from RaftPeerState import RaftPeerState
 from LogData import LogData
 from TimeoutCounter import TimeoutCounter
@@ -162,6 +167,8 @@ class RaftPeer:
     def start_visualization_connection_thread(self, visualizaiton_ip, visualization_port):
         self.visualizaiton_on = True
         self.visualization_scoket = socket.socket()
+        # other wise it will stuck at connection?
+        # self.visualization_scoket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
         self.visualization_addr_port_tuple = (str(visualizaiton_ip), int(visualization_port))
         self.visualization_scoket.connect(self.visualization_addr_port_tuple)
         self.visualization_listen_thread = threading.Thread(target=self.receive_from_one_peer_newline_delimiter,
@@ -193,7 +200,7 @@ class RaftPeer:
             with self.raft_peer_state.lock:
                 # update terms from candidate
                 logger.debug(" inside receive ", extra=self.my_detail)
-                if one_recv_json_message_dict["msg_type"] not in ["request_command"]:
+                if one_recv_json_message_dict["msg_type"] not in ["request_command", "villager_killed"]:
 
                     # if my term is same as request vote sender means, I am a candidate or I receive this term msg
                     # from someone else already, there should one person who is already electing from my knowledge
@@ -229,9 +236,15 @@ class RaftPeer:
                                             "append_entries_leader": self.process_append_entries_leader,
                                             "request_vote_reply": self.process_request_vote_reply,
                                             "request_vote": self.process_request_vote,
-                                            "request_command": self.process_request_command}
+                                            "request_command": self.process_request_command,
+                                            "villager_killed": self.process_killed}
             receive_processing_function = receive_processing_functions[one_recv_json_message_type]
             receive_processing_function(one_recv_json_message_dict)
+
+    def process_killed(self, one_recv_json_message_type):
+        print ("termiated by remote rpc")
+        print (" killed json => " + str(one_recv_json_message_type))
+        os._exit(0)
 
     def process_request_command(self, one_recv_json_message_type):
         with self.raft_peer_state.lock:
@@ -261,7 +274,7 @@ class RaftPeer:
                     one_recv_json_message_type_deep_copy["send_to"] = list(self.visualization_addr_port_tuple)
                     one_recv_json_message_type_deep_copy["sender_term"] = self.raft_peer_state.current_term
                     one_recv_json_message_type_deep_copy["index"] = temp_log.log_index
-                    self.raft_peer_state.state_log.append(one_recv_json_message_type_deep_copy)
+                    self.json_message_send_queue.put(one_recv_json_message_type_deep_copy)
 
             else:
                 self.json_message_send_queue.put({"msg_type": "request_command_reply",
@@ -365,17 +378,18 @@ class RaftPeer:
 
             temp_processed_append_entries_result_json = append_entries_follower.process_append_entries()
 
-            # if self.visualizaiton_on:
-            #     if temp_processed_append_entries_result_json["log_index_start"] != -1 and \
-            #         temp_processed_append_entries_result_json["log_index_end"] and \
-            #         temp_processed_append_entries_result_json["append_entries_result"] == True:
-            #         # wait up to heat beat time to send out commit for visualization rendering purpose
-            #         time.sleep(float("{0:.2f}".format(random.uniform(0, self.append_entries_heart_beat_time_out))))
-            #         temp_processed_append_entries_result_json_deep_copy =  copy.deepcopy(temp_processed_append_entries_result_json)
-            #         temp_processed_append_entries_result_json_deep_copy["send_to"] = list(self.visualization_addr_port_tuple)
-            #         # note that leader append entries used the key 'leader_commit_index' which is different key used in here
-            #         temp_processed_append_entries_result_json_deep_copy["sender_commit_index"] = self.raft_peer_state.current_term
-            #         self.json_message_send_queue.put(temp_processed_append_entries_result_json_deep_copy)
+            if self.visualizaiton_on:
+                # if temp_processed_append_entries_result_json["log_index_start"] != -1 and \
+                #     temp_processed_append_entries_result_json["log_index_end"] and \
+                #     temp_processed_append_entries_result_json["append_entries_result"] == True:
+                    # wait up to heat beat time to send out commit for visualization rendering purpose
+                time.sleep(float("{0:.2f}".format(random.uniform(0, self.append_entries_heart_beat_time_out))))
+                temp_processed_append_entries_result_json_deep_copy = copy.deepcopy(temp_processed_append_entries_result_json)
+                temp_processed_append_entries_result_json_deep_copy["send_to"] = list(self.visualization_addr_port_tuple)
+                # note that leader append entries used the key 'leader_commit_index' which is different key used in here
+                temp_processed_append_entries_result_json_deep_copy["sender_commit_index"] = self.raft_peer_state.current_term
+                self.json_message_send_queue.put(temp_processed_append_entries_result_json_deep_copy)
+                # print (" sent append to visual ")
 
             self.json_message_send_queue.put(temp_processed_append_entries_result_json)
             logger.debug(" after append entries from leader => \n " + str(self.raft_peer_state),
@@ -397,7 +411,7 @@ class RaftPeer:
 
                     if self.visualizaiton_on:
                         leadership_json = {
-                            "msg_type": "leadershipt",
+                            "msg_type": "leadership",
                             "sender_term": self.raft_peer_state.current_term,
                             "send_from": self.raft_peer_state.my_addr_port_tuple,
                             "send_to": list(self.visualization_addr_port_tuple),
@@ -433,7 +447,7 @@ class RaftPeer:
             if self.visualizaiton_on:
                 temp_request_vote_result_deep_copy = copy.deepcopy(temp_request_vote_result)
                 temp_request_vote_result_deep_copy["send_to"] = list(self.visualization_addr_port_tuple)
-                self.json_message_send_queue.put(temp_request_vote_result)
+                self.json_message_send_queue.put(temp_request_vote_result_deep_copy)
 
             self.json_message_send_queue.put(temp_request_vote_result)
         logger.debug(" finished process_request_vote " + str(one_recv_json_message_dict), extra=self.my_detail)
@@ -646,7 +660,6 @@ class RaftPeer:
             return
 
         msg = ""
-        temp = ""
         # could be wrong if msg size bigger than 1024, need further testing
         while True:
 

@@ -66,7 +66,7 @@ if __name__ == '__main__':
         except Exception as e:
             print ("visualization visualization_host_ip/visualization_listen_port not present")
         peer1_raft.start_visualization_connection_thread(str(visual_host_ip), int(visual_host_port))
-
+        time.sleep(1)
     peer1_raft.start_connect_to_all_peer_thread(peer_addr_port_tuple_list)
     peer1_raft.start_raft_peer()
 
