@@ -27,13 +27,19 @@ class MonsterNightEvent(NightEvent):
     def __init__(self, monster):
         super().__init__(monster)
         self.events = Constant.EVENTS[Constant.MONSTER]
+        self.stop = False
 
     def perform_event(self, alive_villager_list):
+        if self.stop:
+            print("night even stopped")
+            return
         self.random_event()
         if self.current_event == Constant.ATTACK:
             self.creature.attack_villager(alive_villager_list)
 
     def render_event(self, screen):
+        if self.stop:
+            return
         if self.creature.attacking:
             self.creature.render_attack(screen)
 
