@@ -3,9 +3,9 @@ import socket
 from debug_print import *
 class ConnectionListener(threading.Thread):
 
-    #host = "192.168.1.101"
-    host = "10.13.248.44"
-    port = 8888
+    host = Constant.GAME_HOST
+    #host = "10.13.248.44"
+    port = Constant.GAME_PORT
     nodes = []
     listening = True
     skt = None

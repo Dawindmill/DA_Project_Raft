@@ -21,7 +21,7 @@ from night_event import NightEvent
 day_countdown = Constant.ONE_DAY
 
 # skills => {skill_name: Skill()}
-def start_game(screen, font, villager_images, monster_image, skills, clock, villagers_connections, player):
+def start_game(screen, font, villager_images, monster_image, skills, skill_images, clock, villagers_connections, player):
     global day_countdown
 
     villager_count = 0
@@ -62,25 +62,25 @@ def start_game(screen, font, villager_images, monster_image, skills, clock, vill
                     if listener.peer_id not in existing_peer_ids:
                         existing_peer_ids.append(listener.peer_id)
                         gender = random.randint(0, 10) % 2
-                        villager_id = int(listener.peer_id.split("_")[-1])
+                        villager_id = int(listener.peer_id[4:])
                         if len(villagers) < len(Constant.VILLAGER_POSITIONS):
                             position = Constant.VILLAGER_POSITIONS[len(villagers)]
                             villager = Villager(villager_images[gender], position,
-                                                villager_id, font, listener, current_leader)
+                                                villager_id, font, listener, current_leader, skill_images)
                             villagers.append(villager)
                         else:
                             for i in range(len(villagers)):
                                 if not villagers[i]:
                                     position = Constant.VILLAGER_POSITIONS[i]
                                     villager = Villager(villager_images[gender], position,
-                                                        villager_id, font, listener, current_leader)
+                                                        villager_id, font, listener, current_leader, skill_images)
                                     villagers[i] = villager
                                     break
                         alive_villagers_list.append(villager)
 
                         # test setting skill
-                        villager.add_skill("animal", skills["animal"].image_sprite)
-                        villager.add_skill("armour", skills["armour"].image_sprite)
+                        #villager.add_skill("animal", skills["animal"].image_sprite)
+                        #villager.add_skill("armour", skills["armour"].image_sprite)
 
                         # SET LEADER TO FIRST FEMALE FOR TESTING
                         #if gender == 1:
@@ -193,8 +193,9 @@ def start_game(screen, font, villager_images, monster_image, skills, clock, vill
                 if len(clicked_skills) > 0:
                     skill = clicked_skills[0][1]
                     if (not skill.applied) and (not skill.greyed):
-                        skill.greyed = True
-                        player.passing_down_skill(clicked_skills[0][1], alive_villagers_list)
+                        applied = player.passing_down_skill(clicked_skills[0][1], alive_villagers_list)
+                        if applied:
+                            skill.greyed = True
 
                 if len(clicked_villager_tiles_tuple) > 0:
                     for one_villager, one_tile_list in clicked_villager_tiles_tuple:
@@ -233,7 +234,7 @@ def main():
         skills[skill_name.split(".")[0]] = Skill(skill_name.split(".")[0], skill_image, Constant.SCREEN_WIDTH - (((skill_image.get_rect().size)[0] * Constant.SKILL_IMAGE_SCALE)/2), 50 + index * ((skill_image.get_rect().size)[0] * Constant.SKILL_IMAGE_SCALE), Constant.SKILL_IMAGE_SCALE, applied=False, greyed=False)
         index += 1
     player = Player(player_image, Constant.SAGE_POSITION[0], Constant.SAGE_POSITION[1])
-    start_game(screen, font, villager_images, monster_image, skills, clock, villager_connections, player)
+    start_game(screen, font, villager_images, monster_image, skills, skill_images, clock, villager_connections, player)
     listener.close_socket()
 
 
