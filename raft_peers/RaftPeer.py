@@ -379,7 +379,10 @@ class RaftPeer:
 
             temp_processed_append_entries_result_json = append_entries_follower.process_append_entries()
 
-            if self.visualizaiton_on:
+            if self.visualizaiton_on and \
+                    temp_processed_append_entries_result_json["append_entries_result"] and \
+                    temp_processed_append_entries_result_json["log_index_start"] != -1 and \
+                    temp_processed_append_entries_result_json["log_index_end"] != -1:
                 # if temp_processed_append_entries_result_json["log_index_start"] != -1 and \
                 #     temp_processed_append_entries_result_json["log_index_end"] and \
                 #     temp_processed_append_entries_result_json["append_entries_result"] == True:
