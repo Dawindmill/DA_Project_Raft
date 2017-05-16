@@ -156,6 +156,7 @@ class RaftPeer:
                         self.raft_peer_state.last_apply = one_log.log_index
                         self.raft_peer_state.commit_index = one_log.log_index
                     if self.visualizaiton_on:
+                        print("sent to visual new commit index")
                         self.json_message_send_queue.put({
                             "msg_type":"commit_index",
                             "send_from":list(self.my_addr_port_tuple),
@@ -389,7 +390,7 @@ class RaftPeer:
                 # note that leader append entries used the key 'leader_commit_index' which is different key used in here
                 temp_processed_append_entries_result_json_deep_copy["sender_commit_index"] = self.raft_peer_state.current_term
                 self.json_message_send_queue.put(temp_processed_append_entries_result_json_deep_copy)
-                # print (" sent append to visual ")
+                print (" sent append reply to visual ")
 
             self.json_message_send_queue.put(temp_processed_append_entries_result_json)
             logger.debug(" after append entries from leader => \n " + str(self.raft_peer_state),
@@ -558,6 +559,7 @@ class RaftPeer:
         logger.debug(" sending append entries heart beats to all peers as client ", extra=self.my_detail)
         with self.raft_peer_state.lock:
             log_len = len(self.raft_peer_state.state_log)
+            append_entries_heart_beat_leader = None
             for one_add_port_tuple in self.peers_addr_client_socket.keys():
                 # this peer is uptodate and we have no new entries just send empty heartbeat
                 if self.raft_peer_state.peers_next_index[one_add_port_tuple] == log_len or \
@@ -568,6 +570,12 @@ class RaftPeer:
                     append_entries_heart_beat_leader = AppendEntriesLeader(self.raft_peer_state, one_add_port_tuple,
                                                                            "append").return_instance_vars_in_dict()
                 self.json_message_send_queue.put(append_entries_heart_beat_leader)
+            if self.visualizaiton_on:
+                append_entries_heart_beat_leader_deep_copy = copy.deepcopy(append_entries_heart_beat_leader)
+                append_entries_heart_beat_leader_deep_copy["send_to"] = self.visualization_addr_port_tuple
+                append_entries_heart_beat_leader_deep_copy["new_entries"] = []
+                self.json_message_send_queue.put(append_entries_heart_beat_leader_deep_copy)
+
 
     # not used so far
     def sent_to_all_peer(self, json_data_dict):

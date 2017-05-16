@@ -67,6 +67,7 @@ class AppendEntriesFollower:
                 return result
 
         if len(self.new_entries) == 0:
+            self.process_commit_index(self.leader_commit_index)
             return result
 
         result["log_index_start"] = log_index_start
@@ -78,9 +79,9 @@ class AppendEntriesFollower:
 
         self.add_in_new_entries()
 
-        self.raft_peer_state.commit_index = self.leader_commit_index
+        # self.raft_peer_state.commit_index = self.leader_commit_index
 
-        self.process_commit_index(self.raft_peer_state.commit_index)
+        self.process_commit_index(self.leader_commit_index)
 
 
         return result
