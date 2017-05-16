@@ -3,14 +3,18 @@ import socket
 from debug_print import *
 class ConnectionListener(threading.Thread):
 
-    host = Constant.GAME_HOST
+    # host = Constant.GAME_HOST
     #host = "10.13.248.44"
-    port = Constant.GAME_PORT
-    nodes = []
-    listening = True
-    skt = None
+    # port = Constant.GAME_PORT
+    # nodes = []
+    # listening = True
+    # skt = None
 
     def __init__(self, nodes):
+        self.host = Constant.GAME_HOST
+        self.port = Constant.GAME_PORT
+        self.skt = None
+        self.listening = True
         self.nodes = nodes
         threading.Thread.__init__(self)
 

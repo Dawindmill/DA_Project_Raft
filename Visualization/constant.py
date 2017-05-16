@@ -1,9 +1,10 @@
 import os
+import pygame
 class Constant:
     GAME_NAME = "Heritage"
 
     #GAME_HOST = "192.168.1.101"
-    GAME_HOST = "10.13.248.44"
+    GAME_HOST = "10.13.168.228"
     GAME_PORT = 8888
 
     SCREEN_WIDTH = 1100
@@ -93,7 +94,8 @@ class Constant:
     MONSTER_POSITIONS = [(20, 50), (20, 100), (20, 150)]
     SAGE_POSITION = (300, 500)
 
-    FONT_NAME = "comicsansms"
+    FONT_NAME = "./assets/SFCartoonistHand.ttf"
+    # FONT_NAME = pygame.font.get_default_font()
     FONT_SIZE = 10
 
     MESSAGE_TYPE = "msg_type"

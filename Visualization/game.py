@@ -49,11 +49,13 @@ def start_game(screen, font, villager_images, monster_image, skills, skill_image
             listener_list.append(listener)
             listener.daemon = True
             listener.start()
+            # print("start listeners")
 
             debug_print("listener list: ")
             debug_print(listener_list)
 
         for listener in listener_list:
+            # print(" listener_list")
             if len(alive_villagers_list) < len(Constant.VILLAGER_POSITIONS):
                 #debug_print("in game")
                 if listener.info_set:
@@ -230,11 +232,16 @@ def start_game(screen, font, villager_images, monster_image, skills, skill_image
 
 
 def main():
+    print ("start")
     # this does not work on mac
     # pygame.__init__(GAME_NAME)
     pygame.init()
+    print("start init")
     pygame.display.set_caption(Constant.GAME_NAME)
-    font = pygame.font.SysFont(Constant.FONT_NAME, Constant.FONT_SIZE)
+    print("start caption")
+    # font = pygame.font.SysFont(Constant.FONT_NAME, Constant.FONT_SIZE)
+    font = pygame.font.Font(Constant.FONT_NAME, 25)
+    print("start font")
     screen = pygame.display.set_mode((Constant.SCREEN_WIDTH, Constant.SCREEN_HEIGHT))
     screen.fill(Constant.WHITE)
     villager_images = []

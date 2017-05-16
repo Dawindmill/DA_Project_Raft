@@ -122,26 +122,29 @@ class Villager(Image, threading.Thread):
     def run(self):
         # self.request_parser.start()
         while not self.dead and self.listener.isAlive():
-            while self.listener.request_queue:
-                request = self.listener.request_queue.pop(0)
-                request_type = request[Constant.MESSAGE_TYPE]
-                if request_type == Constant.APPEND and self.role == Role.LEADER:
-                    if not request[Constant.NEW_ENTRIES]:
-                        self.reclaim_authority()
-                    #else:
-                    #    self.spread_skill(request[Constant.SEND_TO], request[Constant.NEW_ENTRIES])
-                elif request_type == Constant.LEADERSHIP:
-                    self.set_leadership(request)
-                elif request_type == Constant.REQUEST_VOTE:
-                    self.set_candidate(request)
-                elif request_type == Constant.REQUEST_VOTE_REPLY:
-                    self.vote(request)
-                elif request_type == Constant.REQUEST_COMMAND_ACK and self.role == Role.LEADER:
-                    self.leader_receive_learn(request)
-                elif request_type == Constant.APPEND_REPLY:
-                    self.learning_skill(request)
-                elif request_type == Constant.COMMIT_INDEX:
-                    self.learned_skill(request)
+            # print(" in here ")
+            request = self.listener.request_queue.get()
+            # while self.listener.request_queue:
+
+            # request = self.listener.request_queue.pop(0)
+            request_type = request[Constant.MESSAGE_TYPE]
+            if request_type == Constant.APPEND and self.role == Role.LEADER:
+                if not request[Constant.NEW_ENTRIES]:
+                    self.reclaim_authority()
+                #else:
+                #    self.spread_skill(request[Constant.SEND_TO], request[Constant.NEW_ENTRIES])
+            elif request_type == Constant.LEADERSHIP:
+                self.set_leadership(request)
+            elif request_type == Constant.REQUEST_VOTE:
+                self.set_candidate(request)
+            elif request_type == Constant.REQUEST_VOTE_REPLY:
+                self.vote(request)
+            elif request_type == Constant.REQUEST_COMMAND_ACK and self.role == Role.LEADER:
+                self.leader_receive_learn(request)
+            elif request_type == Constant.APPEND_REPLY:
+                self.learning_skill(request)
+            elif request_type == Constant.COMMIT_INDEX:
+                self.learned_skill(request)
             if self.current_health == 0:
                 debug_print("Villager" + str(self.villager_id) + " is dead")
                 self.dead = True
@@ -212,6 +215,7 @@ class Villager(Image, threading.Thread):
         if not request:
             while self.turning_learned_skills_list and self.turning_learned_skills_list[0][0] == len(
                     self.learned_skill_names):
+
                 skill = self.turning_learned_skills_list.pop(0)
                 self.learned_skill(skill[1])
             return

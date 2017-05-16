@@ -3,6 +3,7 @@ import json
 from constant import Constant
 from role import Role
 from debug_print import *
+from queue import Queue
 class VillagerListener(threading.Thread):
 
     def __init__(self, socket):
@@ -14,7 +15,7 @@ class VillagerListener(threading.Thread):
         self.peer_id = ""
         self.socket = socket
         self.info_set = False
-        self.request_queue = []
+        self.request_queue = Queue()
 
     def parse_message(self, msg):
         try:
@@ -44,6 +45,7 @@ class VillagerListener(threading.Thread):
         while True:
             try:
                 self.in_msg += self.socket.recv(1024).decode("utf-8")
+                # print(" in_msg ")
                 if self.in_msg:
                     debug_print("in message: .")
                     debug_print(self.in_msg)
@@ -56,7 +58,7 @@ class VillagerListener(threading.Thread):
                         one_msg = msg_split_list.pop(0)
                         parsed = self.parse_message(one_msg)
                         if parsed:
-                            self.request_queue.append(parsed)
+                            self.request_queue.put(parsed)
             except ConnectionAbortedError:
                 print(self.peer_id + " connection aborted")
                 break
