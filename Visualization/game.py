@@ -39,6 +39,7 @@ def start_game(screen, font, villager_images, monster_image, skills, skill_image
     existing_peer_ids = []
     alive_villagers_list = []
     current_leader = None
+    stop_night_event = False
     while not done:
         while villagers_connections and villager_count < len(Constant.VILLAGER_POSITIONS):
         #while villager_count < len(Constant.VILLAGER_POSITIONS):
@@ -113,7 +114,7 @@ def start_game(screen, font, villager_images, monster_image, skills, skill_image
                         for one_skill_from_villager in villager.skills:
                             one_skill_from_villager.skill_handler(villager, villagers, monsters, player)
                         villager.render_attack(screen)
-                else:
+                elif villager.dead_message_sent:
                     alive_villagers_list.remove(villager)
                     existing_peer_ids.remove(villager.listener.peer_id)
                     villagers[villager_index] = None
@@ -165,6 +166,7 @@ def start_game(screen, font, villager_images, monster_image, skills, skill_image
             for monster in monsters:
                 if not monster.dead:
                     if day_countdown == Constant.NIGHT_TIME:
+                        monster.night_event.stop = stop_night_event
                         monster.night_event.perform_event(alive_villagers_list)
 
                     monster.night_event.render_event(screen)
@@ -225,6 +227,11 @@ def start_game(screen, font, villager_images, monster_image, skills, skill_image
                     for one_villager, one_tile_list in clicked_villager_tiles_tuple:
                         for one_tile in one_tile_list:
                             one_villager.pickTile(one_tile)
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_s:
+                if stop_night_event:
+                    stop_night_event = False
+                else:
+                    stop_night_event = True
 
         pygame.display.flip()
         clock.tick(Constant.FRAME_PER_SECOND)
@@ -239,8 +246,8 @@ def main():
     print("start init")
     pygame.display.set_caption(Constant.GAME_NAME)
     print("start caption")
-    # font = pygame.font.SysFont(Constant.FONT_NAME, Constant.FONT_SIZE)
-    font = pygame.font.Font(Constant.FONT_NAME, 25)
+    font = pygame.font.SysFont(Constant.FONT_NAME, Constant.FONT_SIZE)
+    # font = pygame.font.Font(Constant.FONT_NAME, 25)
     print("start font")
     screen = pygame.display.set_mode((Constant.SCREEN_WIDTH, Constant.SCREEN_HEIGHT))
     screen.fill(Constant.WHITE)

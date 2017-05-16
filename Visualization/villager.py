@@ -39,6 +39,7 @@ class Villager(Image, threading.Thread):
         self.turning_learned_skills_list = []
         #self.learning_skill = None
         self.dead = False
+        self.dead_message_sent = False
         width, height = image.get_rect().size
         center_x, center_y = position
         super().__init__(image, center_x, center_y, height, width)
@@ -155,8 +156,9 @@ class Villager(Image, threading.Thread):
         if self.dead:
             data = {Constant.MESSAGE_TYPE: "villager_killed", Constant.PEER_ID: self.listener.peer_id}
             self.listener.socket.sendall(str.encode(json.dumps(data) + "\n"))
-            debug_print("villager killed message sent")
+            print("villager killed message sent")
             self.listener.close_socket()
+            self.dead_message_sent = True
 
 
     def reclaim_authority(self):
