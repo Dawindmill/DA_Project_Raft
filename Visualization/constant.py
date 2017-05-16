@@ -2,6 +2,9 @@ import os
 class Constant:
     GAME_NAME = "Heritage"
 
+    GAME_HOST = "192.168.1.101"
+    GAME_PORT = 11222
+
     SCREEN_WIDTH = 1100
     SCREEN_HEIGHT = 800
     FRAME_PER_SECOND = 60
@@ -19,6 +22,8 @@ class Constant:
     HOUSE = "house"
     PLANT = "plant"
     SWORD = "sword"
+
+    SKILLS = [ANIMAL, ARMOUR, HOUSE, PLANT, SWORD]
 
     ITEM_NAME_SWORD = "sword"
     ITEM_NAME_SWORD_ATTACK_POWER_ADD = 1
@@ -64,7 +69,7 @@ class Constant:
 
     SKILL_IMAGES = ['./assets/skill_icons/using/'+str(f) for f in os.listdir('./assets/skill_icons/using') if f.endswith('.png')]
     VILLAGER_IMAGES = ["assets/villager_m.png", "assets/villager_f.png"]
-    VILLAGER_MAX_HP = 2.0
+    VILLAGER_MAX_HP = 3.0
     MONSTER_IMAGE = "assets/monster.png"
     # MONSTER_ATTACK_POWER = 0.5
     MONSTER_ATTACK_POWER = 2
@@ -98,26 +103,34 @@ class Constant:
     REQUEST_VOTE = "request_vote"
     REQUEST_VOTE_REPLY = "request_vote_reply"
     REQUEST_COMMAND = "request_command"
+    REQUEST_COMMAND_ACK = "request_command_ack"
+    REQUEST_COMMAND_REPLY = "request_command_reply"
     SERVER_INFO = "information"
     LEADERSHIP = "leadership"
+    COMMIT_INDEX = "commit_index"
 
+    MESSAGE_TYPES = [APPEND, APPEND_REPLY, REQUEST_VOTE, REQUEST_VOTE_REPLY, REQUEST_COMMAND, REQUEST_COMMAND_ACK,
+                     REQUEST_COMMAND_REPLY, SERVER_INFO, LEADERSHIP, COMMIT_INDEX]
+
+    REQUEST_COMMAND_LIST = "request_command_list"
     SEND_FROM = "send_from"
     SEND_TO = "send_to"
-
     PEER_ID = "peer_id"
-
     NEW_ENTRIES = "new_entries"
-
     SENDER_TERM = "sender_term"
+    LEARN_SKILL = "learn_skill"
+    INDEX = "index"
+    VOTE_PEER_ID = "vote_peer_id"
+    VOTE_GRANTED = "vote_granted"
 
     AUTHORITY_MESSAGE = "I'm the leader!"
+    NEW_LEADER_MESSAGE = "I've become the new leader!"
     CANDIDATE_MESSAGE = "I want to be the leader!"
     VOTE_MESSAGE = "I vote for villager {}!"
 
     HOST_INDEX = 0
     PORT_INDEX = 1
 
-    MESSAGE_TYPES = [APPEND, APPEND_REPLY, REQUEST_VOTE, REQUEST_VOTE_REPLY, REQUEST_COMMAND, SERVER_INFO]
 
     MESSAGE_TIME = 5 * FRAME_PER_SECOND
 

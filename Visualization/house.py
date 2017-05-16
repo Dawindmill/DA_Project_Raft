@@ -6,7 +6,7 @@ class House(Image):
     def __init__(self, owner_center_x, owner_center_y):
         image = pygame.image.load(Constant.HOUSE_IMAGE)
 
-        self.display_house = False
+        self.display_house = True
         self.max_durability = Constant.HOUSE_DURABILITY
         self.current_durability = Constant.HOUSE_DURABILITY
         width, height = image.get_rect().size

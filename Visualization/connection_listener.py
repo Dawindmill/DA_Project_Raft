@@ -3,9 +3,9 @@ import socket
 from debug_print import *
 class ConnectionListener(threading.Thread):
 
-    #host = "192.168.1.101"
-    host = "10.13.248.44"
-    port = 8888
+    host = Constant.GAME_HOST
+    #host = "10.13.248.44"
+    port = Constant.GAME_PORT
     nodes = []
     listening = True
     skt = None
@@ -16,6 +16,7 @@ class ConnectionListener(threading.Thread):
 
     def run(self):
         self.skt = socket.socket()
+        self.skt.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.skt.bind((self.host, self.port))
         self.skt.listen(5)
         debug_print("Listener started listinging on port " + str(self.port))
