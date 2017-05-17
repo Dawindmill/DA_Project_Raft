@@ -407,9 +407,8 @@ class Villager(Image, threading.Thread):
         if self.role != Role.FOLLOWER:
             if self.role == Role.LEADER:
                 title = "Leader"
-
-            role = self.font.render(title, 1, Constant.BLACK)
-            screen.blit(role, (self.x - role.get_width() // 2, self.y + self.height // 2 + role.get_height() + 2))
+                role = self.font.render(title, 1, Constant.BLACK)
+                screen.blit(role, (self.x - role.get_width() // 2, self.y + self.height // 2 + role.get_height() + 2))
 
         if self.message_countdown > 0:
             message = self.font.render(self.current_message, 1, Constant.BLACK)
