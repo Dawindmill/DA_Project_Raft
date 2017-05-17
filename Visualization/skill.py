@@ -45,8 +45,6 @@ class Skill(Image):
         if self.can_applied:
             cur_villager.addItemToLeftHand(ConstantImage.ARMOUR_IMAGE_SPRITE,Constant.ITEM_NAME_ARMOUR ,Constant.ARMOUR_IMAGE_SCLAE)
             self.applied = True
-            # one_villager.defend_power_increase(Constant.ITEM_ARMOUR_DEFEND_POWER_ADD)
-
 
     def plant_handler(self,cur_villager ,villagers_list, monster, player):
         if self.can_applied:
@@ -59,7 +57,6 @@ class Skill(Image):
         if self.can_applied:
             cur_villager.addItemToRightHand(ConstantImage.ARMOUR_IMAGE_SPRITE,Constant.ITEM_NAME_ARMOUR ,Constant.ARMOUR_IMAGE_SCLAE)
             self.applied = True
-            # one_villager.attack_power_increase(Constant.ITEM_NAME_SWORD_ATTACK_POWER_ADD)
 
     # housebuilder
     def house_handler(self, cur_villager,villagers_list, monsters, player):

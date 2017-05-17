@@ -1,3 +1,15 @@
+"""
+
+
+Author: Bingfeng Liu
+
+This is the class to perfome the coudown operations for
+the random timeout in Raft.
+
+
+
+"""
+
 import logging
 
 logger = logging.getLogger("TimeoutCounter")

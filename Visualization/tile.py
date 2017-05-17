@@ -10,36 +10,33 @@ class Tile(Image):
 
 
         if (tile_type == Constant.TILE_TYPE_PLANT):
+            # this will ini plant tile and plant figures on the tile
             self.increase_health_amount = Constant.PLANT_HEALTH_INCREASE
             self.count_down_const = Constant.TREE_MATURE_COUNT_DOWN
             self.count_down = self.count_down_const
             image = pygame.image.load(Constant.TILE_PLANT_IMAGE)
-            # image = ConstantImage.TILE_PLANT_SPRINT
             not_mature_image = pygame.image.load(Constant.TREE_IMAGE)
-            # not_mature_image = ConstantImage.PLANT_NOT_MATURE_SPRINT
             height, width = not_mature_image.get_rect().size
             self.animal_or_plant.append(pygame.transform.scale(not_mature_image, (int(width * Constant.TREE_IMAGE_SCALE), int(height * Constant.TREE_IMAGE_SCALE))))
-
+            # plant has two image to represent its maturity
             mature = pygame.image.load(Constant.TREE_WITH_APPLE_IMAGE)
-            # mature = ConstantImage.PLANT_MATURE_SPRINT
             height, width = mature.get_rect().size
             self.animal_or_plant.append(pygame.transform.scale(mature, ( int(width * Constant.TREE_WITH_APPLE_IMAGE_SCALE), int(height * Constant.TREE_WITH_APPLE_IMAGE_SCALE))))
         else:
+            # this will ini animal tile and animal figures on the tile
             self.increase_health_amount = Constant.ANIMAL_HEALTH_INCREASE
             self.count_down_const = Constant.CHICKEN_MATURE_COUNT_DOWN
             self.count_down = self.count_down_const
             image = pygame.image.load(Constant.TILE_ANIMAL_IMAGE)
-            # image = ConstantImage.TILE_ANIMAL_SPRINT
             not_mature_image = pygame.image.load(Constant.CHICKEN_EGG_IMAGE)
-            # not_mature_image = ConstantImage.CHCKEN_EGG_NOT_MATURE_SPRINT
             height, width = not_mature_image.get_rect().size
             self.animal_or_plant.append(pygame.transform.scale(not_mature_image, (int(width * Constant.CHICHEN_EGG_IMAGE_SCALE), int(height * Constant.CHICHEN_EGG_IMAGE_SCALE))))
-
+            # animal has two image to represent its maturity
             mature = pygame.image.load(Constant.CHICKEN_IMAGE)
-            # mature = ConstantImage.CHCKEN_EGG_MATURE_SPRINT
             height, width = mature.get_rect().size
             self.animal_or_plant.append( pygame.transform.scale(mature, (int(width * Constant.CHICEN_IAMGE_SCALE), int(height * Constant.CHICEN_IAMGE_SCALE))))
 
+        # set the tile type either animal tile or plant tile
         self.tile_type = tile_type
         self.display_plant_or_animal = False
         self.mature = False
@@ -54,6 +51,9 @@ class Tile(Image):
 
 
     def un_mature(self):
+        """
+        switching between mature and unmature
+        """
         if self.mature == True:
             self.mature = False
 

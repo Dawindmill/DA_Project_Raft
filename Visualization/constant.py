@@ -1,10 +1,10 @@
 import os
 import pygame
+
 class Constant:
     GAME_NAME = "Heritage"
 
-    #GAME_HOST = "192.168.1.101"
-    GAME_HOST = "10.13.248.44"
+    GAME_HOST = "10.13.190.32"
     GAME_PORT = 8888
 
     SCREEN_WIDTH = 1100
@@ -74,7 +74,6 @@ class Constant:
     VILLAGER_IMAGES = ["assets/villager_m.png", "assets/villager_f.png"]
     VILLAGER_MAX_HP = 3.0
     MONSTER_IMAGE = "assets/monster.png"
-    # MONSTER_ATTACK_POWER = 0.5
     MONSTER_ATTACK_POWER = 2
     MONSTER_ATTACK_IMAGE = "assets/monster_attack.png"
     MONSTER_ATTACK_IMAGE_SCALE = 1
@@ -87,7 +86,6 @@ class Constant:
 
     SKILL_IMAGE_SCALE = 0.2
     SKILL_IMAGE_SCALE_VILLAGER = 0.05
-    # MESSAGE_IMAGE = "assets/message.png"
 
     # y increase move down, x increase move right
     VILLAGER_POSITIONS = [(200, 200), (350, 200), (500, 200), (650, 200), (800, 200), (950, 200),
@@ -95,8 +93,9 @@ class Constant:
     MONSTER_POSITIONS = [(20, 50), (20, 100), (20, 150)]
     SAGE_POSITION = (300, 500)
 
-    FONT_NAME = "comicsansms"
-    FONT_SIZE = 10
+    FONT_NAME = "./assets/SFCartoonistHand.ttf"
+    # FONT_NAME = "comicsansms"
+    FONT_SIZE = 20
 
     MESSAGE_TYPE = "msg_type"
 
@@ -143,10 +142,8 @@ class Constant:
     MESSAGE_TIME = 1 * FRAME_PER_SECOND
 
     ONE_DAY = int(20 * FRAME_PER_SECOND)
-    # ONE_DAY = 70
     DAY_TIME = int(ONE_DAY / 4 * 3)
     NIGHT_TIME = int(ONE_DAY / 4)
-    # NIGHT_TIME = 70
 
     DEBUG = False
 

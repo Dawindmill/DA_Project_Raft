@@ -1,3 +1,13 @@
+"""
+
+
+Author: Bingfeng Liu
+
+This is the class to create the right appendentries for followers
+
+
+
+"""
 import logging
 from LogData import LogData
 

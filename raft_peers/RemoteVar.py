@@ -3,6 +3,9 @@
 Author: Bingfeng Liu
 Date Created: 24/04/2017
 
+This class is used to store the result of each
+request_command if it is committed.
+
 '''
 
 import _thread

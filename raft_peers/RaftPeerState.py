@@ -1,5 +1,8 @@
 '''
 Author: Bingfeng Liu
+
+This class stored the current state of this peer.
+
 Created Date: 18/04/2017
 '''
 import _thread

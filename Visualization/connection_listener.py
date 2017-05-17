@@ -3,12 +3,7 @@ import socket
 from debug_print import *
 class ConnectionListener(threading.Thread):
 
-    # host = Constant.GAME_HOST
-    #host = "10.13.248.44"
-    # port = Constant.GAME_PORT
-    # nodes = []
-    # listening = True
-    # skt = None
+
 
     def __init__(self, nodes):
         self.host = Constant.GAME_HOST
@@ -17,12 +12,17 @@ class ConnectionListener(threading.Thread):
         self.listening = True
         self.nodes = nodes
         threading.Thread.__init__(self)
+        self.backlog = 5
 
     def run(self):
+        """
+        This method will act like accept method to listen for incoming connections
+        from Raft peers
+        """
         self.skt = socket.socket()
         self.skt.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.skt.bind((self.host, self.port))
-        self.skt.listen(5)
+        self.skt.listen(self.backlog)
         debug_print("Listener started listinging on port " + str(self.port))
         while self.listening:
             villager_connection = self.skt.accept()

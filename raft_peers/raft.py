@@ -1,3 +1,17 @@
+"""
+
+
+Author: Bingfeng Liu
+
+This class is deprecated, since it is created at the
+beginning of the Raft implementation for some simple unittest,
+since the architecture of Raft changes later, so it does not
+run properly with the new design.
+
+
+
+"""
+
 import time
 import _thread
 from RaftPeer import *

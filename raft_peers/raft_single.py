@@ -1,3 +1,16 @@
+"""
+
+
+Author: Bingfeng Liu
+
+This is the main file of the Raft program.
+
+For usage of this program please see the readme.txt
+
+
+
+"""
+
 import sys
 from configparser import ConfigParser
 import logging
@@ -42,6 +55,9 @@ if __name__ == '__main__':
 
         # port use to listen connection from user.py
         user_listen_port = int(config_parser[cur_peer_name]["raft_peer_user_listen_port"])
+        append_entries_timeout = int(config_parser["raft_timeout"]["append_entreis"])
+        min_leader_election_timeout = int(config_parser["raft_timeout"]["min_leader_election"])
+        max_leader_election_timeout = int(config_parser["raft_timeout"]["max_leader_election"])
     except Exception as e:
         sys.exit(str(e) + " Please check the format of raft_peer.ini file, it should contain raft_peer_listen_port and raft_peer_client_port")
 
@@ -49,7 +65,7 @@ if __name__ == '__main__':
     logging.basicConfig(format=FORMAT, level=logging.DEBUG, filename= ("logs/" + cur_peer_name+"_raft_log_file"), filemode="w")
 
     print ("host_ip => " + host_ip)
-    peer1_raft = RaftPeer(host_ip, listen_port, user_listen_port, cur_peer_name, total_peer_num)
+    peer1_raft = RaftPeer(host_ip, listen_port, user_listen_port, cur_peer_name, total_peer_num, append_entries_timeout, min_leader_election_timeout, max_leader_election_timeout)
 
     peer_addr_port_tuple_list = []
 

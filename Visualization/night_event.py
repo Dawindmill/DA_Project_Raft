@@ -5,8 +5,7 @@ import abc
 
 class NightEvent(threading.Thread):
     __metaclass__ = abc.ABCMeta
-    #events = {"monster": ["attack"],
-    #          "villager": []}
+
 
     def __init__(self, creature):
         self.events = []
@@ -33,6 +32,7 @@ class MonsterNightEvent(NightEvent):
         if self.stop:
             print("night even stopped")
             return
+        # random the events that will only happen at night like monster attack
         self.random_event()
         if self.current_event == Constant.ATTACK:
             self.creature.attack_villager(alive_villager_list)

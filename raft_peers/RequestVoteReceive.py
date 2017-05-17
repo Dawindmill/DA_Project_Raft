@@ -1,3 +1,12 @@
+"""
+
+
+Author: Bingfeng Liu
+
+This class will process the requect_vote from other peers.
+
+
+"""
 import logging
 
 logger = logging.getLogger("RequestVote")

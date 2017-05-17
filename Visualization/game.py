@@ -22,15 +22,19 @@ day_countdown = Constant.ONE_DAY
 
 # skills => {skill_name: Skill()}
 def start_game(screen, font, villager_images, monster_image, skills, skill_images, clock, villagers_connections, player, s):
+    # day_countdown is to simulate the day time and evening time in the game.
     global day_countdown
 
     villager_count = 0
+    # villagers' collection
     villagers = []
+    # monsters' collection
     monsters = []
+
+    # init two monsters
     monsters.append(Monster(monster_image, Constant.MONSTER_POSITIONS[0][0], Constant.MONSTER_POSITIONS[0][1]))
     monsters.append(Monster(monster_image, Constant.MONSTER_POSITIONS[1][0], Constant.MONSTER_POSITIONS[1][1]))
 
-    #next_villager_id = 1
 
     global done
     done = False
@@ -41,37 +45,44 @@ def start_game(screen, font, villager_images, monster_image, skills, skill_image
     current_leader = None
     stop_night_event = False
     while not done:
+        # if there is some peer connected the game server
         while villagers_connections and villager_count < len(Constant.VILLAGER_POSITIONS):
-        #while villager_count < len(Constant.VILLAGER_POSITIONS):
+            # get the socket and information of the peer
             node_socket, information = villagers_connections.pop(0)
 
+            # create peer's listener and later use to receive message to render
+            # corresponding game logcs for associated villager
             listener = VillagerListener(node_socket)
 
             listener_list.append(listener)
             listener.daemon = True
             listener.start()
-            # print("start listeners")
 
             debug_print("listener list: ")
             debug_print(listener_list)
 
+        # if there is villager listener in the listener_list
+        # which means we haven't create the Villager object to render the graphics
         for listener in listener_list:
-            # print(" listener_list")
             if len(alive_villagers_list) < len(Constant.VILLAGER_POSITIONS):
-                #debug_print("in game")
                 if listener.info_set:
                     debug_print("info set")
                     listener_list.remove(listener)
                     if listener.peer_id not in existing_peer_ids:
+                        # keep track of peers in the visualization
                         existing_peer_ids.append(listener.peer_id)
+                        # randomly make it female or male villager
                         gender = random.randint(0, 10) % 2
                         villager_id = int(listener.peer_id[4:])
+                        # we can only create up to the max pos of villagers in the constant.py
                         if len(villagers) < len(Constant.VILLAGER_POSITIONS):
                             position = Constant.VILLAGER_POSITIONS[len(villagers)]
                             villager = Villager(villager_images[gender], position,
                                                 villager_id, font, listener, current_leader, skill_images)
                             villagers.append(villager)
                         else:
+                            # if the max nmber of villagers are reached
+                            # we needt check which villager is none and create new Villager object for it
                             for i in range(len(villagers)):
                                 if not villagers[i]:
                                     position = Constant.VILLAGER_POSITIONS[i]
@@ -81,34 +92,24 @@ def start_game(screen, font, villager_images, monster_image, skills, skill_image
                                     break
                         alive_villagers_list.append(villager)
 
-                        # test setting skill
-                        #villager.add_skill("animal", skills["animal"].image_sprite)
-                        #villager.add_skill("armour", skills["armour"].image_sprite)
-
-                        # SET LEADER TO FIRST FEMALE FOR TESTING
-                        #if gender == 1:
-                        #    villager.set_leader_role(Role.LEADER)
-                        #else:
-                        #    villager.set_leader_role(Role.CANDIDATE)
-                        #villagers.append(villager)
-                        # diable villager thread for game devs
                         villager.daemon = True
                         villager.start()
                         villager_count += 1
-                        #next_villager_id += 1
                         debug_print(villagers)
             else:
                 break
 
+        # reset the game graphics
         screen.fill(Constant.WHITE)
 
         for villager_index in range(len(villagers)):
             villager = villagers[villager_index]
             if villager:
+                # alive villager render the graph, and trying to build house if skill learnt
                 if not villager.dead:
                     villager.render(screen)
                     villager.build_house()
-
+                    # remove the transparency of learnt skill icon
                     if villager.turning_learned_skills_list:
                         villager.learned_skill(None)
 
@@ -116,38 +117,26 @@ def start_game(screen, font, villager_images, monster_image, skills, skill_image
                             one_skill_from_villager.skill_handler(villager, villagers, monsters, player)
                         villager.render_attack(screen)
                 elif villager.dead_message_sent:
+                    # if village dead send RPC to kill the remote peer
                     alive_villagers_list.remove(villager)
                     existing_peer_ids.remove(villager.listener.peer_id)
                     villagers[villager_index] = None
                     villager_count -= 1
-        # find leader
 
+        # find leader
         new_leader = player.find_leader(villagers)
         player.render(screen)
+        # checking the leadership changes
         if new_leader != current_leader:
             current_leader = new_leader
             for villager in villagers:
                 if villager:
                     villager.current_leader = new_leader
-
+        # rendering monster
         for one_monster in monsters:
             if not one_monster.dead:
                 one_monster.render(screen)
-
-        # render attack
-        '''for one_villager in villagers:
-            if one_villager and not one_villager.dead:
-                if one_villager.turning_learned_skills_list:
-                    one_villager.learned_skill(None)
-                # apply skills
-                for one_skill_from_villager in one_villager.skills:
-                    one_skill_from_villager.skill_handler(one_villager, villagers, monsters, player)
-                one_villager.render_attack(screen)'''
-
-        '''for one_monster in monsters:
-            if not one_monster.dead:
-                one_monster.render_attack(screen)'''
-
+        # if the skilled learnt, make the skill button transparent
         for one_skill in skills.values():
             greyed = False
             if current_leader:
@@ -158,12 +147,11 @@ def start_game(screen, font, villager_images, monster_image, skills, skill_image
             one_skill.greyed = greyed
             one_skill.render(screen)
 
-        #print(" day_countdown " + str(day_countdown))
+        # if day count is less than 0 means we should reset it to day time
         if day_countdown <= 0:
             day_countdown = Constant.ONE_DAY
+        # when day_countdown less than NIGHT_TIME threshold, start to rendering night events
         elif day_countdown <= Constant.NIGHT_TIME:
-            #print ("night")
-                #alive_villagers_list = [one_villager for one_villager in villagers if not one_villager.dead]
             for monster in monsters:
                 if not monster.dead:
                     if day_countdown == Constant.NIGHT_TIME:
@@ -172,29 +160,17 @@ def start_game(screen, font, villager_images, monster_image, skills, skill_image
 
                     monster.night_event.render_event(screen)
 
-            '''for one_monster in monsters:
-                villagers_not_dead = [one_villager for one_villager in villagers if not one_villager.dead]
-                one_monster.attack_villager_or_not(villagers_not_dead, True)
-                # one_monster.render(screen)'''
-
-            '''for monster in monsters:
-                if not monster.dead:'''
-
+        # add a transparent black layers to simulate night effect
             # inspired from http://stackoverflow.com/questions/6339057/draw-a-transparent-rectangle-in-pygame
-            #s = pygame.Surface((Constant.SCREEN_WIDTH, Constant.SCREEN_HEIGHT))  # the size of your rect
             s.set_alpha(200)  # alpha level
             s.fill(Constant.BLACK)  # this fills the entire surface
             screen.blit(s, (0, 0))  # (0,0) are the top-left coordinates
-            # debug_print("night")
 
 
         day_countdown -= 1
 
-        # a+=1
-        # pygame.draw.rect(screen, (255,0,0), pygame.Rect((x,y), (100,100)))
-        # if (x != 400):
-        # x+=2
         for event in pygame.event.get():
+            # check the events in the game like mouseclick and quite button clicked
             if event.type == pygame.QUIT:
                 done = False
                 pygame.display.quit()
@@ -205,9 +181,9 @@ def start_game(screen, font, villager_images, monster_image, skills, skill_image
                 sys.exit()
             if event.type == pygame.MOUSEBUTTONUP:
                 pos = pygame.mouse.get_pos()
-                # debug_print(str(skills))
                 clicked_skills = [(skill_name, one_skill) for skill_name, one_skill in skills.items() if one_skill.image_rect.collidepoint(pos)]
                 clicked_villager_tiles_tuple = []
+                # click the villager to kill it instantly
                 for one_villager in villagers:
                     if not one_villager:
                         continue
@@ -219,8 +195,8 @@ def start_game(screen, font, villager_images, monster_image, skills, skill_image
                         if one_tile.image_rect.collidepoint(pos):
                             temp_tiles.append(one_tile)
                     clicked_villager_tiles_tuple.append((one_villager, temp_tiles))
-                # debug_print("clicked image => " + str(clicked_sprites))
                 if len(clicked_skills) > 0:
+                    # check which skill button is clicked
                     skill = clicked_skills[0][1]
                     if (not skill.applied) and (not skill.greyed):
                         applied = player.passing_down_skill(clicked_skills[0][1], alive_villagers_list)
@@ -231,6 +207,7 @@ def start_game(screen, font, villager_images, monster_image, skills, skill_image
                     for one_villager, one_tile_list in clicked_villager_tiles_tuple:
                         for one_tile in one_tile_list:
                             one_villager.pickTile(one_tile)
+            # press key 's' could stop monster's attck
             if event.type == pygame.KEYDOWN and event.key == pygame.K_s:
                 if stop_night_event:
                     stop_night_event = False
@@ -243,30 +220,34 @@ def start_game(screen, font, villager_images, monster_image, skills, skill_image
 
 
 def main():
-    print ("start")
-    # this does not work on mac
-    # pygame.__init__(GAME_NAME)
+    # print ("start")
     pygame.init()
-    print("start init")
+    # print("start init")
     pygame.display.set_caption(Constant.GAME_NAME)
-    print("start caption")
-    font = pygame.font.SysFont(Constant.FONT_NAME, Constant.FONT_SIZE)
-    # font = pygame.font.Font(Constant.FONT_NAME, 25)
-    print("start font")
+    # print("start caption")
+    font = pygame.font.Font(Constant.FONT_NAME, Constant.FONT_SIZE)
+    # print("start font")
     screen = pygame.display.set_mode((Constant.SCREEN_WIDTH, Constant.SCREEN_HEIGHT))
     screen.fill(Constant.WHITE)
     villager_images = []
+
+    # load all skill images group them with image name and image object
     skill_images = {(image_file_name.split("/")[-1]).split(".")[0]:pygame.image.load(image_file_name) for image_file_name in Constant.SKILL_IMAGES}
-    print(skill_images.items())
+    # print(skill_images.items())
     skills = {}
     debug_print(str(skill_images))
+    # load all villager's image, girl and boy
     for image in Constant.VILLAGER_IMAGES:
         villager_images.append(pygame.image.load(image))
+    # load player's image
     player_image = pygame.image.load(Constant.PLAYER_IMAGE)
+    # load monster's image
     monster_image = pygame.image.load(Constant.MONSTER_IMAGE)
+    # set the clock in pygame, so later on we could adjust the Frame Rate Per Second
     clock = pygame.time.Clock()
+    # each villager is is a thread to consuming their own JSON data
     villager_connections = []
-
+    # start visualization listening socket
     listener = ConnectionListener(villager_connections)
     listener.daemon = True
     listener.start()

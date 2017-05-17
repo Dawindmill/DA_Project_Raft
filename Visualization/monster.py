@@ -39,38 +39,6 @@ class Monster(Image):
         self.current_health -= hp_decrement
 
 
-    '''def attack_villager_or_not(self, villager_list_not_dead, night = False):
-
-        if self.attacked:
-            return
-
-        # only decrease attack_freq at night
-        if self.attack_frequent > 0 and night:
-            self.attack_frequent -= 1
-            return
-        else:
-            self.attack_frequent = self.attack_frequent_const
-
-        self.attacked = random.random() >= self.attack_probability
-
-        if self.attacked and len(villager_list_not_dead) != 0:
-            attack_index = random.randint(0, len(villager_list_not_dead) - 1)
-            villager = villager_list_not_dead[attack_index]
-            villager.being_attacked(self.attack_power)
-            # see if monster get attacked by villager or not
-
-            self.attack = Attack(ConstantImage.MONSTER_ATTACK_IMAGE_SPRITE, villager.x, villager.y, Constant.MONSTER_ATTACK_IMAGE_SCALE)
-            self.attack_display_count_down = self.attack_display_count_down_const
-            self.x = villager.x - villager.width//2
-            self.y = villager.y + int (random.random() * villager.height)
-
-            # after monster moved, villager attack it, so the attack image could be rendered in the right monster position
-            villager.attack_monster_or_not(self)
-
-
-
-        return self.attacked'''
-
     def attack_villager(self, alive_villager_list):
         if len(alive_villager_list) != 0:
             attack_index = random.randint(0, len(alive_villager_list) - 1)

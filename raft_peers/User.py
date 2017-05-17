@@ -4,6 +4,10 @@
 Author: Bingfeng Liu
 Date Created: 23/04/2017
 
+This is the class which implemented a CLI for testing the Raft.
+
+For usage please refer to readme.txt
+
 """
 
 import sys

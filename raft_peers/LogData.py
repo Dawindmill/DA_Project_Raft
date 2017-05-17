@@ -1,6 +1,9 @@
 '''
 Author: Bingfeng Liu
 
+This is the class to create the log object.
+
+
 Date: 19/04/2017
 '''
 

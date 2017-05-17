@@ -1,3 +1,14 @@
+"""
+
+
+Author: Bingfeng Liu
+
+This is the class to process the append entreis from the leader
+
+
+
+"""
+
 import logging
 from LogData import LogData
 

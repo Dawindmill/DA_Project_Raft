@@ -15,7 +15,6 @@ WHITE = (225, 225, 225)
 
 VILLAGER_IMAGES = ["assets/villager_m.png", "assets/villager_f.png"]
 MONSTER_IMAGE = "assets/monster.png"
-#MESSAGE_IMAGE = "assets/message.png"
 
 VILLAGER_POSITIONS = [(100, 300), (200, 200), (300, 100), (400, 100), (500, 200), (600, 300),
                       (600, 400), (500, 500), (400, 600), (300, 600), (200, 500), (100, 400)]
@@ -88,7 +87,7 @@ class Villager(Image, threading.Thread):
                 request_type = request[MESSAGE_TYPE]
                 if request_type == SERVER_INFO:
                     self.set_info(request)
-                #elif request_type ==
+
             self.dead = True
         if self.dead:
             data = {MESSAGE_TYPE: "villager_killed", PEER_ID: self.peer_id}
@@ -149,34 +148,6 @@ class VillagerListener(threading.Thread):
                     if parsed:
                         self.villager.messages.append(parsed)
 
-            #debug_print("message list: ")
-            #debug_print(self.messages)
-
-
-
-
-'''class Message(Image):
-
-    source = None
-    dest = None
-    content_str = ""
-    content_json = None
-    message_type = ""
-
-    def __init__(self, image, source, dest, content_str):
-        self.content_str = content_str
-        width, height = image.get_rect().size
-        self.source = source
-        self.dest = dest
-        super().__init__(image, source.x, source.y, height // 15, width // 15)
-
-    def move(self):
-        if (self.x, self.y) != (self.dest.x, self.dest.y):
-            self.x += (self.dest.x - self.source.x)//100
-            self.y += (self.dest.y - self.source.y)//100
-            return False
-        return True
-'''
 
 
 

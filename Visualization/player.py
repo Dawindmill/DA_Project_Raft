@@ -22,17 +22,12 @@ class Player(Image):
 
     # skill => from button
     def passing_down_skill(self, skill, villager_list):
-        # if this skill is already clicked just return
-        #if skill.applied:
-        #    return
         debug_print("in passing skill" + skill.skill_name)
-        #with Villager.lock:
+
         cur_leader = self.find_leader(villager_list)
         if cur_leader:
             debug_print("leader!")
             if self.last_skill == None:
-                #cur_leader.add_skill(skill.skill_name)
-                # disable the skill button
                 skill.applied = True
                 self.last_skill = skill
                 self.send_command_to_leader(skill, cur_leader)
@@ -45,8 +40,6 @@ class Player(Image):
                             debug_print("last skill is not applied")
                             return False
                         else:
-                            #cur_leader.add_skill(skill.skill_name)
-                            # disable the skill button
                             skill.applied = True
                             self.last_skill = skill
                             self.send_command_to_leader(skill, cur_leader)

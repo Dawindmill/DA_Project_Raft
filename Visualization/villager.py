@@ -20,6 +20,7 @@ class Villager(Image, threading.Thread):
     lock = threading.RLock()
     # for testing purpose only want to create one leader
     leader_taken = False
+    
 
     def __init__(self, image, position, villager_id, font, listener, current_leader, skill_images):
         self.role = Role.FOLLOWER
@@ -37,7 +38,6 @@ class Villager(Image, threading.Thread):
         self.message_countdown = 0
         self.learned_skill_names = []
         self.turning_learned_skills_list = []
-        #self.learning_skill = None
         self.dead = False
         self.dead_message_sent = False
         width, height = image.get_rect().size
@@ -47,21 +47,14 @@ class Villager(Image, threading.Thread):
         self.font = font
         self.attacked = False
         self.item = []
-        # self.attack_display_count_down = Constant.ATTACK_DISPLAY_COUNT_DOWN
-        # self.attack_display_count_down_const = Constant.ATTACK_DISPLAY_COUNT_DOWN
         self.attack = None
 
-        #Attack(ConstantImage.VILLAGER_ATTACK_IMAGE_SPRITE, self.x, self.y)
 
         self.land = Land(self, Constant.LAND_SIZE)
 
         self.house = None
         self.build_house_countdown = Constant.BUILD_HOUSE_COUNT_DOWN
 
-        #self.addItemToLeftHand(ConstantImage.ARMOUR_IMAGE_SPRITE,Constant.ITEM_NAME_ARMOUR ,Constant.ARMOUR_IMAGE_SCLAE)
-        #self.addItemToRightHand(ConstantImage.SWORD_IMAGE_SPRITE, Constant.ITEM_NAME_SWORD, Constant.SWORD_IMAGE_SCALE)
-
-        # self.request_parser = VillagerListener(self)
         threading.Thread.__init__(self)
 
         self.attack_probability = 0.5
@@ -74,6 +67,13 @@ class Villager(Image, threading.Thread):
 
 
     def pickTile(self, tile):
+        """
+        
+        Check which tile is clicked by mouse, and applied its benefits to Villager
+        
+        :param tile: Tile 
+        :return: 
+        """
         if tile.mature:
             if tile.tile_type == Constant.TILE_TYPE_PLANT:
                 self.current_health_up_with_amount(Constant.PLANT_HEALTH_INCREASE)
@@ -82,17 +82,41 @@ class Villager(Image, threading.Thread):
             tile.un_mature()
 
     def addHouse(self):
+        """
+        
+        Add a house Object to Villager
+         
+        """
         self.house = House(self.x, self.y)
 
     # armour
     def addItemToLeftHand(self, image, item_name, image_scale):
+        """
+        
+        Adding a item to the left hand side of the villager
+        
+        :param image: Image 
+        :param item_name:  str
+        :param image_scale: int
+        :return: 
+        """
         width, height = image.get_rect().size
         temp_item_center_x = self.x + width * image_scale // 2
         temp_item_center_y = self.y + width * image_scale
         temp_item = Item(image, temp_item_center_x, temp_item_center_y, item_name, image_scale)
         self.item.append(temp_item)
+
     # sword
     def addItemToRightHand(self, image, item_name, image_scale):
+        """
+
+        Adding a item to the right hand side of the villager
+
+        :param image: Image 
+        :param item_name:  str
+        :param image_scale: int
+        :return: 
+        """
         width, height = image.get_rect().size
         temp_item_center_x = self.x - width * image_scale
         temp_item_center_y = self.y
@@ -100,13 +124,25 @@ class Villager(Image, threading.Thread):
         self.item.append(temp_item)
 
     def being_attacked(self, hp_decrement):
-        # self.attacked = True
-        # self.attack_display_count_down = self.attack_display_count_down_const
+        """
+        
+        if villager is attcked set the hp down
+        
+        :param hp_decrement: int
+        
+        """
         self.current_health_down_with_amount(hp_decrement)
 
 
 
     def add_skill(self, skill_name):
+        """
+        
+        Add skill Object to player's skill list
+        
+        :param skill_name: str 
+         
+        """
         skill_num = len(self.skills)
         image = self.skill_images[skill_name]
 
@@ -114,30 +150,20 @@ class Villager(Image, threading.Thread):
         one_skill = Skill(skill_name, image, self.x - self.width/2 - ((image.get_rect().size)[0] * Constant.SKILL_IMAGE_SCALE_VILLAGER) / 2, (self.y + self.height/2) - (int (skill_num) * int((image.get_rect().size)[1] * Constant.SKILL_IMAGE_SCALE_VILLAGER)), Constant.SKILL_IMAGE_SCALE_VILLAGER, False)
         self.skills.append(one_skill)
 
-    '''def set_leader_role(self, role):
-        if not Villager.leader_taken and role == Role.LEADER:
-            Villager.leader_taken = True
-            self.role = role
-        else:
-            self.role = Role.CANDIDATE'''
 
     def run(self):
-        # self.request_parser.start()
         while (not self.dead) and (not self.listener.stopped):
-            print("peer" + str(self.villager_id) + "'s listener is stopped: " + str(self.listener.stopped))
-            # print(" in here ")
+            # consuming the parsed JSON message from the queue
             request = self.listener.request_queue.get()
-            # while self.listener.request_queue:
 
-            # request = self.listener.request_queue.pop(0)
             request_type = request[Constant.MESSAGE_TYPE]
+            # according to the type of the request applying corresponding methods to villager
             if request_type == Constant.VILLAGER_DEAD:
+                self.dead = True
                 continue
             if request_type == Constant.APPEND and self.role == Role.LEADER:
                 if not request[Constant.NEW_ENTRIES]:
                     self.reclaim_authority()
-                #else:
-                #    self.spread_skill(request[Constant.SEND_TO], request[Constant.NEW_ENTRIES])
             elif request_type == Constant.LEADERSHIP:
                 self.set_leadership(request)
             elif request_type == Constant.REQUEST_VOTE:
@@ -158,6 +184,7 @@ class Villager(Image, threading.Thread):
             print(str(self.villager_id) + "'s listener is dead")
             self.dead = True
         if self.dead:
+            # if dead send the JSON to cooresponding remote Raft peer to ask it to terminate
             data = {Constant.MESSAGE_TYPE: "villager_killed", Constant.PEER_ID: self.listener.peer_id}
             try:
                 self.listener.socket.sendall(str.encode(json.dumps(data) + "\n"))
@@ -170,10 +197,22 @@ class Villager(Image, threading.Thread):
 
 
     def reclaim_authority(self):
+        """
+        Display a dialgue box to show the string 'I'm the leader'
+        
+        """
         self.set_message(Constant.AUTHORITY_MESSAGE)
 
     def set_leadership(self, request):
+        """
+        
+        trying to set the leader by this leadership request dictionary
+        
+        :param request: dict
+        """
         term = request[Constant.SENDER_TERM]
+        # if there is still a leader and the term number of JSON messag is smaller than
+        # current term ignore this outdated leader messge
         if self.current_leader and self.current_leader.leadership_term > term:
             return
         self.role = Role.LEADER
@@ -181,7 +220,14 @@ class Villager(Image, threading.Thread):
         self.set_message(Constant.NEW_LEADER_MESSAGE)
 
     def set_candidate(self, request):
+        """
+        
+        set villager to candidate by this request_vote request
+        
+        :param request: dict
+        """
         term = request[Constant.SENDER_TERM]
+        # abort the outdated request_vote message
         if self.current_leader and self.current_leader.leadership_term > term:
             return
         self.role = Role.CANDIDATE
@@ -355,20 +401,17 @@ class Villager(Image, threading.Thread):
             one_skill.render(screen)
 
         self.land.render(screen)
-        # text blocked? need them or not ?
         name = self.font.render("Villager " + str(self.villager_id), 1, Constant.BLACK)
         screen.blit(name, (self.x - name.get_width() // 2, self.y + self.height // 2))
 
         if self.role != Role.FOLLOWER:
             if self.role == Role.LEADER:
                 title = "Leader"
-            else:
-                title = "Candidate"
+
             role = self.font.render(title, 1, Constant.BLACK)
             screen.blit(role, (self.x - role.get_width() // 2, self.y + self.height // 2 + role.get_height() + 2))
 
         if self.message_countdown > 0:
-            #debug_print("printing messages")
             message = self.font.render(self.current_message, 1, Constant.BLACK)
             screen.blit(message, (self.x - message.get_width() // 2, self.y - self.height // 2 - message.get_height() - 2))
             self.message_countdown -= 1
@@ -381,25 +424,6 @@ class Villager(Image, threading.Thread):
                                                   (self.width * (self.current_health / self.max_health),
                                                    Constant.HEAL_BAR_HEIGHT)))
 
-        '''if self.role == Role.LEADER:
-
-            pygame.draw.rect(screen, Constant.RED, pygame.Rect((self.x - self.width * 1.5,
-                                                                self.y - self.height // 4),
-                                                               (self.width,
-                                                                self.height)))
-
-            #for i in range(self.message_count):
-            #    message = self.font.render("I am Leader", 1, Constant.BLACK)
-            #    screen.blit(message, (self.x - self.width * 1.5 + 1, self.y - self.height // 4 + message.get_height() * i))
-            self.message_count += 1
-            if self.message_count > 5:
-                self.message_count = 1'''
         for one_item in self.item:
             one_item.render(screen)
 
-
-        # if self.attacked & self.attack_display_count_down != 0:
-        #     self.attack.render(screen)
-        #     self.attack_display_count_down -= 0
-        #     if self.attack_display_count_down == 0:
-        #         self.attacked = False

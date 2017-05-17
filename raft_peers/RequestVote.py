@@ -1,3 +1,13 @@
+"""
+
+
+Author: Bingfeng Liu
+
+This class will create request_vote json.
+
+
+"""
+
 import logging
 
 logger = logging.getLogger("RequestVote")
