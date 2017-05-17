@@ -4,7 +4,7 @@ import pygame
 class Constant:
     GAME_NAME = "Heritage"
 
-    GAME_HOST = "10.13.190.32"
+    GAME_HOST = "192.168.1.102"
     GAME_PORT = 8888
 
     SCREEN_WIDTH = 1100

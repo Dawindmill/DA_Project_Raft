@@ -129,6 +129,10 @@ def start_game(screen, font, villager_images, monster_image, skills, skill_image
         # checking the leadership changes
         if new_leader != current_leader:
             current_leader = new_leader
+            if current_leader:
+                for i in range(len(new_leader.skills)):
+                    if not new_leader.skills[i].applied:
+                        new_leader.learned_skill({Constant.INDEX:i})
             for villager in villagers:
                 if villager:
                     villager.current_leader = new_leader
@@ -145,6 +149,8 @@ def start_game(screen, font, villager_images, monster_image, skills, skill_image
                         greyed = True
                         break
             one_skill.greyed = greyed
+            if not one_skill.greyed:
+                one_skill.applied = False
             one_skill.render(screen)
 
         # if day count is less than 0 means we should reset it to day time
