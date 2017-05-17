@@ -1,9 +1,9 @@
 # Distributed Algorithm Project - Raft Implementation
 
 ## Team Members:
-- Regina Zhang
-- Bingfeng Liu
-- Jimmy Chiang
+- Regina Zhang - 646179
+- Bingfeng Liu - 639187 
+- Jimmy Chiang - 822373
 - Wen-Pin Wu - 871702 
 
 ## Milestones
