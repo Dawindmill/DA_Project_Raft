@@ -4,7 +4,7 @@
 - Regina Zhang
 - Bingfeng Liu
 - Jimmy Chiang
-- Allen Wu
+- Wen-Pin Wu - 871702 
 
 ## Milestones
 
