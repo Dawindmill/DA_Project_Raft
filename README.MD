@@ -22,6 +22,7 @@ A sage, which also lives in the village and is controlled by the player, knows a
 
 Raft is the algorithm chosen to elect leader and replicate the log, which contains all the knowledge taught by the sage, from the leader to the villagers in the backend of this game. 
 
+Note: Only when majority of the Villagers learn the knowledge, the leader(user/player) can start passing down another knowledge.
 
 ## How to Run the project
 
