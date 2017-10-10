@@ -22,7 +22,11 @@ A sage, which also lives in the village and is controlled by the player, knows a
 
 Raft is the algorithm chosen to elect leader and replicate the log, which contains all the knowledge taught by the sage, from the leader to the villagers in the backend of this game. 
 
-Note: Only when majority of the Villagers learn the knowledge, the leader(user/player) can start passing down another knowledge.
+Note: 
+
+- Only when majority of the villagers learn the knowledge, the leader(user/player) can start passing down another knowledge.
+
+- You could consume the animal (chicken) and plant to recover villagers' HP by clicking the chicken and the plant.
 
 ## How to Run the project
 
@@ -157,6 +161,86 @@ For sample RPCs used in this Raft system, you could check out the following tabl
 
 ![Image of Game Screenshot](./current_game_screenshot.png)
 
+## Knowledges Explain
+
+1. animal
+
+![animal](./Visualization/assets/skill_icons/animal.png)
+
+*Description*
+
+- Growing Animals
+- Boots up Villager's max health or current health
+- Could also benefit Monster's health
+
+
+2. armour
+
+![armour](./Visualization/assets/skill_icons/armour.png)
+
+*Description*
+
+- Villager can put on armour and increase defensive power
+
+3. fire
+
+![fire](./Visualization/assets/skill_icons/fire.png)
+
+### Description
+
+- Villager can cook and gain additional increase from the foods
+
+4. Fix
+
+![fix](./Visualization/assets/skill_icons/fix.png)
+
+*Description*
+
+- Villager can speed up the repair process
+
+5. medicine
+
+![medicine](./Visualization/assets/skill_icons/medicine.png)
+
+*Description*
+
+- Villager can produce medicines to heal themselves
+
+6. plant
+
+![plant](./Visualization/assets/skill_icons/plant.png)
+
+*Description*
+
+- Villager can grow apple tree and get apple as food
+
+7. sing
+
+![sing](./Visualization/assets/skill_icons/sing.png)
+
+*Description*
+
+- Singing lower the chance of the monster to attack
+
+8. sword
+
+![sword](./Visualization/assets/skill_icons/sword.png)
+
+*Description*
+
+- Villager can hurt monster while monsters are attacking
+
+9. tool
+
+![tool](./Visualization/assets/skill_icons/tool.png)
+
+*Description*
+
+- Villager can start building their house
+
+
+**Note: Not all of the above `knowledges` are implemented in the game right now.**
+
 ## RPCs Examples in Raft
 
 RPC Message Type | Example JSON format | Description
@@ -169,3 +253,6 @@ append_entries_follower_reply | {'log_index_start': -1, 'log_index_end': -1, 'se
 request_command | {"msg_type": "request_command", "request_command_list": [], "send_to": ["127.0.0.1", 20001], "send_from": ["127.0.0.1", 59162]} | Used by user to request performing certain commands in the system.
 request_command (learn_skill) | {"msg_type": "request_command", "request_command_list": ["armour", "learn_skill", true], "send_from": ["127.0.0.1", 59894], "send_to": ["127.0.0.1", 20002]} | One example of user sending commands to add skill variable in the Log of each peer
 request_command_reply | {'msg_type': 'request_command_reply', 'command_result': 'not_leader', 'send_from': ('127.0.0.1', 20001), 'send_to': ['127.0.0.1', 59162]} | Used to reply to the user about the result of the command. If received the empty command_list in request_command JSON the command result will be either ‘not_leader’ or ‘is_leader’ to inform the user whether it connected to the leader or not.
+
+## Credits
+The game assests are from https://opengameart.org and https://www.spriters-resource.com
